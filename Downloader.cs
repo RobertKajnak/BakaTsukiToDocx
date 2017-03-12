@@ -75,7 +75,7 @@ namespace Baka_Tsuki_Downloader
                 
 
                 //inserting everything at once with \n instead of paragraph by paragraph increased speed by ~1000 times
-                string chapterContent = chapter.Replace("<p>", "").Replace("</p>","").Replace("<br />","\n");
+                string chapterContent = chapter.Replace("<p>", "").Replace("</p>","").Replace("<br />","\n").Replace("&lt;","<lt>").Replace("&gt;","<gt>");
                 //wordWriter.Paragraph(chapter);
 
 
@@ -83,20 +83,34 @@ namespace Baka_Tsuki_Downloader
                 wordWriter.Chapter(chapterTitle);
 
 
-                //TODO handle & for italic etc. tags 
+                //TODO handle '&' for italic etc. tags 
 
+                string buffer = "";
                 while (chapterContent.Length != 0)
                 {
+
                     int firstIndex = chapterContent.IndexOf('<');
 
-                    ///case 1: there is a tag, and it is at the beginning of the text
-                    if (firstIndex == 0)
+                    int closeBracketIndex = chapterContent.IndexOf('>');
+                    closeBracketIndex = closeBracketIndex != -1 ? closeBracketIndex : chapterContent.Length;
+                    string tag=  "";
+                    TagType.Type tagType = TagType.Type.uncategorized;
+                    bool isInParagraphTag = false;
+                    if (firstIndex != -1 && closeBracketIndex < chapterContent.Length)
                     {
-                        int closeBracketIndex = chapterContent.IndexOf('>');
-                        closeBracketIndex = closeBracketIndex != -1 ? closeBracketIndex : chapterContent.Length;
-                        string tag = chapterContent.Substring(0, closeBracketIndex + 1);
+                        tag = chapterContent.Substring(firstIndex, closeBracketIndex - firstIndex + 1);
+                        tagType = TagType.getType(tag);
+                        isInParagraphTag = TagType.isInParagraphTag(tag);
+                    }
+                    ///case 1: there is a tag, and it is at the beginning of the text
+                    if (firstIndex == 0 && !isInParagraphTag)
+                    {
+                        if (buffer.Length != 0)
+                        {
+                            wordWriter.Paragraph(buffer);
+                        }
 
-                        switch (TagType.getType(tag))
+                        switch (tagType)
                         {
                             case TagType.Type.h1:
                                 Console.Write("Detected header 1. This was not expected");
@@ -118,13 +132,64 @@ namespace Baka_Tsuki_Downloader
                     ///case 2: there is a tag, but it is not at the beginning, so the text up to that point is copied
                     else if (firstIndex != -1 && chapterContent.Length != 0)
                     {
+                        ///case 2.1: there is a tag, not at the beginning and it is an inparagraph tag,i.e. the paragraph should not be broken
+                        if (isInParagraphTag)
+                        {
+                            string toMod = chapterContent.Substring(0, firstIndex + tag.Length);
+                            chapterContent = chapterContent.Substring(firstIndex + tag.Length);
+                            switch (tagType)
+                            {
+                                case (TagType.Type.gt):
+                                    toMod = toMod.Replace(tag, ">");
+                                    break;
+                                case (TagType.Type.lt):
+                                    toMod = toMod.Replace(tag, "<");
+                                    break;
+                                case TagType.Type.span:
+                                    string spanContent = TagType.getContent(chapterContent, TagType.Type.span, out chapterContent);
+                                    //chapterContent = chapterContent.Insert(firstIndex, "[" + spanContent + "]");
+                                    
+                                    ///TODO remove this
+                                    Console.ForegroundColor = ConsoleColor.Red;
+                                    Console.WriteLine("found span with content: " + spanContent);
+                                    Console.ResetColor();
+                                    break;
+                                default:
+                                    Console.WriteLine("inParagraph tag has not been handled properly: " + tag);
+                                    break;
+                            }
+                            buffer += toMod;
+                            continue;
+                        }
+
+                        if (buffer.Length != 0)
+                        {
+                            chapterContent = buffer + chapterContent;
+                            firstIndex += buffer.Length;
+                            buffer = "";
+                        }
+                            
+                        ///case 2.original, i.e. no inparagraph tag
                         wordWriter.Paragraph(chapterContent.Substring(0, firstIndex));
                         chapterContent = chapterContent.Substring(firstIndex);
+                        
                     }
                     ///case 3 there are no tags, but the text is non-zero length, i.e. it is a tag-free text
                     else if  (firstIndex == -1 && chapterContent.Length != 0)
                     {
-                        wordWriter.Paragraph(chapterContent);
+                        if (buffer.Length != 0)
+                        {
+                            chapterContent = buffer + chapterContent;
+                            buffer = "";
+                        }
+                        int lastCharPos = chapterContent.Length - 1;
+
+                        while (chapterContent[lastCharPos] == '\n')
+                        {
+                            lastCharPos--;
+                        }
+
+                        wordWriter.Paragraph(chapterContent.Substring(0,lastCharPos));
                         chapterContent = "";
                     }
                 

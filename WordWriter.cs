@@ -219,14 +219,14 @@ namespace Baka_Tsuki_Downloader
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
-            }
-            try
-            {
-                app.ActiveDocument.Close();//if the program crashes before this point it is likely the doc will be stuck in an open state
-            }
-            catch
-            {
-                Console.WriteLine("Save cancelled");
+                try
+                {
+                    app.ActiveDocument.Close();//if the program crashes before this point it is likely the doc will be stuck in an open state
+                }
+                catch
+                {
+                    Console.WriteLine("Save cancelled");
+                }
             }
 
             app.Quit();
