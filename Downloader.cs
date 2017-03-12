@@ -104,10 +104,10 @@ namespace Baka_Tsuki_Downloader
                             case TagType.Type.h2:
                                 Console.WriteLine("chapter title has not been handled properly");
                                 break;
-                            /*case TagType.Type.h3:
+                            case TagType.Type.h3:
                                 string subtitle = TagType.getContent(chapterContent, TagType.Type.h3,out chapterContent);
                                 wordWriter.SubChapter(subtitle);
-                                break;*/
+                                break;
                             default:
                                 Console.WriteLine("Uninterpreted tag: " + tag);
                                 chapterContent = chapterContent.Substring(closeBracketIndex + 1);

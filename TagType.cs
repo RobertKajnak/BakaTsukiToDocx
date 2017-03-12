@@ -45,6 +45,18 @@ namespace Baka_Tsuki_Downloader
                 return null;
             }
             string content = rawText.Substring(startIndex + 1);
+
+            ///gets the content of the first innermost tag
+            while (startIndex < content.Length && content[0] == '<')
+            {
+                startIndex = content.IndexOf('>');
+                if (startIndex == -1)
+                {
+                     cleanedText = rawText;
+                     return null;
+                }
+                content = content.Substring(startIndex + 1);
+            }
             int endIndex = content.IndexOf('<');
             ///please note that startindex is in rawtext, while endindex is in content, i.e. endindex==length of content and startindex is irrelevant at this point
             if (endIndex == -1)
@@ -54,7 +66,13 @@ namespace Baka_Tsuki_Downloader
             }
             content = content.Substring(0, endIndex);
             string endTag = tags[(int)expectedType].Replace("<", "</");
-            cleanedText = rawText.Substring(rawText.IndexOf(endTag) + endTag.Length);
+            int endTagIndex = rawText.IndexOf(endTag);
+            int isEndLine = 0;
+            while (rawText.Length > endTagIndex && rawText[endTagIndex + endTag.Length + isEndLine -1]!='\n')
+            {
+                isEndLine++;
+            }
+            cleanedText = rawText.Substring(endTagIndex + endTag.Length + isEndLine);
             return content;
         }
     }
