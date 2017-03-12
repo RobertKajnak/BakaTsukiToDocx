@@ -79,10 +79,8 @@ namespace Baka_Tsuki_Downloader
                 //wordWriter.Paragraph(chapter);
 
 
-                string chapterTitle = chapterContent.Substring(chapterContent.IndexOf('>') + 1);
-                chapterTitle = chapterTitle.Substring(0, chapterTitle.IndexOf('<'));
-                wordWriter.Chapter(chapterTitle); 
-                chapterContent = chapterContent.Substring(chapterContent.IndexOf("</h2>") + 5);
+                string chapterTitle = TagType.getContent(chapterContent, TagType.Type.h2, out chapterContent);
+                wordWriter.Chapter(chapterTitle);
 
 
                 //TODO handle & for italic etc. tags 
@@ -101,17 +99,21 @@ namespace Baka_Tsuki_Downloader
                         switch (TagType.getType(tag))
                         {
                             case TagType.Type.h1:
+                                Console.Write("Detected header 1. This was not expected");
                                 break;
                             case TagType.Type.h2:
                                 Console.WriteLine("chapter title has not been handled properly");
                                 break;
+                            /*case TagType.Type.h3:
+                                string subtitle = TagType.getContent(chapterContent, TagType.Type.h3,out chapterContent);
+                                wordWriter.SubChapter(subtitle);
+                                break;*/
                             default:
                                 Console.WriteLine("Uninterpreted tag: " + tag);
                                 chapterContent = chapterContent.Substring(closeBracketIndex + 1);
                                 break;
                         }
                         
-                        firstIndex = chapterContent.IndexOf('<');
                     }
                     ///case 2: there is a tag, but it is not at the beginning, so the text up to that point is copied
                     else if (firstIndex != -1 && chapterContent.Length != 0)
