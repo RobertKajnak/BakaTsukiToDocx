@@ -162,6 +162,16 @@ namespace Baka_Tsuki_Downloader
                     return false;
                 }
             }
+            public override int GetHashCode()
+            {
+                int result = 0;
+                foreach (char c in id)
+                {
+                    result += c;
+                }
+
+                return result;
+            }
         }
 
     }

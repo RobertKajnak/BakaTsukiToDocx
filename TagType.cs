@@ -115,5 +115,92 @@ namespace Baka_Tsuki_Downloader
             cleanedText = rawText.Substring(endTagIndex + endTag.Length + isEndLine);
             return content;
         }
+
+
+        public static string[] getSpanContent(string rawText, Type expectedType, out string cleanedText)
+        {
+            //in case there are other neted tags that have more than 2, this can be moved to parameter
+            int nestCount = 2;
+            string[] result = new string[nestCount];
+            int endIndex = -1;
+            string content =rawText;
+
+            for (int i = 0; i < nestCount; i++)
+            {
+                int startIndex = content.IndexOf('>');
+                if (startIndex == -1)
+                {
+                    cleanedText = content;
+                    return null;
+                }
+                content = content.Substring(startIndex + 1);
+
+                ///gets the content of the ith innermost tag
+                while (startIndex < content.Length && content[0] == '<')
+                {
+                    startIndex = content.IndexOf('>');
+                    if (startIndex == -1)
+                    {
+                        cleanedText = rawText;
+                        return null;
+                    }
+                    content = content.Substring(startIndex + 1);
+                }
+
+                endIndex = content.IndexOf('<');
+
+                ///please note that startindex is in rawtext, while endindex is in content, i.e. endindex==length of content and startindex is irrelevant at this point
+                if (endIndex == -1)
+                {
+                    cleanedText = rawText;
+                    return null;
+                }
+                result[i] = content.Substring(0, endIndex);
+            }
+
+            ///if this is -1, there is a tag that is not closes
+            endIndex = content.IndexOf('>');
+            content = content.Substring(endIndex + 1);
+
+            endIndex = content.IndexOf('>');
+            ////TODO this does not feel quite right
+            while (content[endIndex + 1] == '<')
+            {
+
+                ///endindex -1 should not occur
+                content = content.Substring(endIndex + 1);
+                endIndex = content.IndexOf('>');
+                //int tempIndex = content.IndexOf('>');
+                /*   if (tempIndex == -1)
+                       break;
+                   endIndex = tempIndex;*/
+
+            }
+            content = content.Substring(endIndex + 1);
+
+            int endlnCount = 0;
+            while (content[endlnCount] == '\n')
+            {
+                endlnCount++;
+            }
+            cleanedText = content.Substring(endlnCount);
+            /*string endTag = tags[(int)expectedType].Replace("<", "</");
+            int endTagIndex = rawText.IndexOf(endTag);*/
+
+            /* string semiformated = rawText;
+             while (semiformated[endIndex + endTag.Length] == '<' && semiformated[endIndex + endTag.Length + 1] == '/')
+             {
+                 string temp = semiformated.Substring(endIndex);
+             }*/
+
+            /*int isEndLine = 0;
+            while (rawText.Length > endTagIndex && rawText[endTagIndex + endTag.Length + isEndLine - 1] != '\n')
+            {
+                isEndLine++;
+            }
+            cleanedText = rawText.Substring(endTagIndex + endTag.Length + isEndLine);*/
+            return result;
+        }
+
     }
 }

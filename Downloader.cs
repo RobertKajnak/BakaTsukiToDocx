@@ -146,12 +146,13 @@ namespace Baka_Tsuki_Downloader
                                     toMod = toMod.Replace(tag, "<");
                                     break;
                                 case TagType.Type.span:
-                                    string spanContent = TagType.getContent(chapterContent, TagType.Type.span, out chapterContent);
-                                    //chapterContent = chapterContent.Insert(firstIndex, "[" + spanContent + "]");
+                                    toMod = toMod.Replace(tag, "");
+                                    string[] spanContent = TagType.getSpanContent(chapterContent, TagType.Type.span, out chapterContent);
+                                    chapterContent = chapterContent.Insert(0, spanContent[0] + " [" + spanContent[1] + "]");
                                     
                                     ///TODO remove this
                                     Console.ForegroundColor = ConsoleColor.Red;
-                                    Console.WriteLine("found span with content: " + spanContent);
+                                    Console.WriteLine("found span with content: " + spanContent[0] + " ; " + spanContent[1]);
                                     Console.ResetColor();
                                     break;
                                 default:
