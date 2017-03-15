@@ -66,7 +66,7 @@ namespace Baka_Tsuki_Downloader
         {
             parag = doc.Content.Paragraphs.Add(ref oMissing);
             parag.Range.Text = title;
-            parag.Format.set_Style("Title");
+            parag.Format.set_Style(doc.Styles[WdBuiltinStyle.wdStyleTitle]);
             parag.Range.Font.Bold = 1;
             parag.Format.SpaceAfter = 20;    //32 pt spacing after paragraph.
             parag.Format.Alignment = WdParagraphAlignment.wdAlignParagraphCenter;
@@ -107,7 +107,7 @@ namespace Baka_Tsuki_Downloader
 
             parag = doc.Content.Paragraphs.Add(rng);
             parag.Range.Text = title;
-            parag.set_Style("Heading 1");
+            parag.set_Style(WdBuiltinStyle.wdStyleHeading1);
             
             parag.Format.SpaceAfter = 6;
             parag.Range.InsertParagraphAfter();
@@ -120,7 +120,7 @@ namespace Baka_Tsuki_Downloader
             parag = doc.Content.Paragraphs.Add(rng);
             parag.Range.Text = title;
             
-            parag.set_Style("Heading 2");
+            parag.set_Style(WdBuiltinStyle.wdStyleHeading2);
             parag.Format.SpaceAfter = 4;
             parag.Range.InsertParagraphAfter();
         }
@@ -132,7 +132,7 @@ namespace Baka_Tsuki_Downloader
 
             parag = doc.Content.Paragraphs.Add(rng);
             parag.Range.Text = text + "\n";
-            parag.Range.set_Style("Normal");
+            parag.Range.set_Style(WdBuiltinStyle.wdStyleNormal);
             parag.Format.SpaceAfter = 6;
             //parag.Range.InsertParagraphAfter();
         }
@@ -142,7 +142,7 @@ namespace Baka_Tsuki_Downloader
 
             rng = doc.Bookmarks.get_Item(ref oEndOfDoc).Range;//sets the cursor to the end of the document
             app.Selection.Start = rng.Start;//need to set the cursor of the app.Selection to the end
-            app.Selection.set_Style("Normal");
+            app.Selection.set_Style(WdBuiltinStyle.wdStyleNormal);
             try
             {
                 app.Selection.InlineShapes.AddPicture(location);
@@ -197,7 +197,7 @@ namespace Baka_Tsuki_Downloader
             rng.InsertParagraphBefore();
             parag = doc.Content.Paragraphs.Add(tocBeginning);
             parag.Range.Text = "Table of contents";
-            parag.Format.set_Style("Heading 1");
+            parag.Format.set_Style(WdBuiltinStyle.wdStyleHeading1);
 
         }
 
