@@ -122,6 +122,19 @@ namespace Baka_Tsuki_Downloader
                                 string subtitle = TagType.getContent(chapterContent, TagType.Type.h3,out chapterContent);
                                 wordWriter.SubChapter(subtitle);
                                 break;
+                            case TagType.Type.ul:
+                                //Console.WriteLine("List not handled properly...");
+                                //chapterContent = chapterContent.Substring(closeBracketIndex + 1);
+                                try {
+                                    string[] listElements = TagType.getNestedContent(chapterContent, TagType.Type.ul, out chapterContent);
+                                    wordWriter.BulletList(listElements);
+                                    foreach (string s in listElements);
+                                }
+                                catch
+                                {
+                                    Console.WriteLine("Malformed List detected");
+                                }
+                                break;
                             default:
                                 Console.WriteLine("Uninterpreted tag: " + tag);
                                 chapterContent = chapterContent.Substring(closeBracketIndex + 1);
@@ -149,11 +162,6 @@ namespace Baka_Tsuki_Downloader
                                     toMod = toMod.Replace(tag, "");
                                     string[] spanContent = TagType.getSpanContent(chapterContent, TagType.Type.span, out chapterContent);
                                     chapterContent = chapterContent.Insert(0, spanContent[0] + " [" + spanContent[1] + "]");
-                                    
-                                    ///TODO remove this
-                                    Console.ForegroundColor = ConsoleColor.Red;
-                                    Console.WriteLine("found span with content: " + spanContent[0] + " ; " + spanContent[1]);
-                                    Console.ResetColor();
                                     break;
                                 default:
                                     Console.WriteLine("inParagraph tag has not been handled properly: " + tag);

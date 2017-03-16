@@ -9,8 +9,8 @@ namespace Baka_Tsuki_Downloader
 {
     static class TagType
     {
-        public enum Type {h1=0, h2, h3, gt, lt, span, img, uncategorized};
-        private static string[] tags= { "<h1>", "<h2>", "<h3>", "<gt>", "<lt>", "<span", "<img" };
+        public enum Type {h1=0, h2, h3, ul, li, gt, lt, span, img, uncategorized};
+        private static string[] tags= { "<h1>", "<h2>", "<h3>", "<ul>", "<li>", "<gt>", "<lt>", "<span", "<img" };
         private readonly static Type[] inParagraphTags = { Type.lt, Type.gt , Type.span};
 
         /// <summary>
@@ -26,11 +26,15 @@ namespace Baka_Tsuki_Downloader
                 return Type.h2;
             else if (tag.Equals(tags[(int)Type.h3]))
                 return Type.h3;
+            else if (tag.Equals(tags[(int)Type.ul]))
+                return Type.ul;
+            else if (tag.Equals(tags[(int)Type.li]))
+                return Type.li;
             else if (tag.Equals(tags[(int)Type.gt]))
                 return Type.gt;
             else if (tag.Equals(tags[(int)Type.lt]))
                 return Type.lt;
-            else if (Regex.IsMatch(tag, tags[(int)Type.span] + "."))
+            else if (Regex.IsMatch(tag, tags[(int)Type.span].Insert(5,".")))
                 return Type.span;
             else
                 return Type.uncategorized;
@@ -101,12 +105,6 @@ namespace Baka_Tsuki_Downloader
             string endTag = tags[(int)expectedType].Replace("<", "</");
             int endTagIndex = rawText.IndexOf(endTag);
 
-           /* string semiformated = rawText;
-            while (semiformated[endIndex + endTag.Length] == '<' && semiformated[endIndex + endTag.Length + 1] == '/')
-            {
-                string temp = semiformated.Substring(endIndex);
-            }*/
-
             int isEndLine = 0;
             while (rawText.Length > endTagIndex && rawText[endTagIndex + endTag.Length + isEndLine -1]!='\n')
             {
@@ -116,11 +114,95 @@ namespace Baka_Tsuki_Downloader
             return content;
         }
 
+        /// TODO(tentative) this might actually be a lot faster if a single char array was used (i.e. the content of the string not copied n times)
+        public static string[] getNestedContent(string rawText, Type expectedOuterType, out string cleanedText)
+        {
+            List<String> result = new List<string>();
+            string outerEndTag = tags[(int)expectedOuterType].Insert(1, "/") + (expectedOuterType.Equals(Type.span)?">":"");
+
+            string processing = rawText;
+            ///this should get the correct content wether the initial tag is included or not, even if there is unnecessary text before it
+            if (processing.Substring(processing.IndexOf("<"), processing.IndexOf(">") + 1).Contains(tags[(int)expectedOuterType]))
+            {
+                processing = processing.Substring(processing.IndexOf(">") + 1);
+            }
+            cleanedText = processing;
+
+            int i = 0;
+            while (processing.Length != 0)
+            {
+                string innerTag = processing.Substring(processing.IndexOf('<'), processing.IndexOf('>') + 1);
+                ///exit flag/actual exit rather
+                if (innerTag.Equals(outerEndTag))
+                {
+                    cleanedText = cleanedText.Substring(outerEndTag.Length);
+                    cleanedText = removeEndlinesFromBeginning(cleanedText);
+                    return result.ToArray();
+                }
+
+                ///create the end tag for the tag that has been found
+                string innerEndTag;
+                string innerTagTruncated = innerTag;
+                if (innerTag.Contains(" "))
+                {
+                    innerTagTruncated = innerTag.Substring(innerTag.IndexOf(" "));
+                    innerEndTag = innerTagTruncated + ">";
+                }
+                else
+                {
+                    innerEndTag = innerTag;
+                }
+                innerEndTag = innerEndTag.Insert(1, "/");
+
+                processing = processing.Substring(processing.IndexOf(innerTag) + innerTag.Length);
+                
+                string content = processing;
+
+                ///check if there isn't an opened tag of the same type of the opened tag
+                int endTagIndex = processing.IndexOf(innerEndTag);
+                int contentEndTagIndex = endTagIndex;
+                int offset = 0;
+                ///this may be a lazy apporach, but it doesn't really cost speed and better than trying to rearrange the while
+                if (!content.Substring(offset, contentEndTagIndex).Contains(innerTagTruncated))
+                {
+                    processing = processing.Substring(endTagIndex);
+                }
+                else {
+                    while (content.Substring(offset, contentEndTagIndex).Contains(innerTagTruncated))
+                    {
+                        processing = processing.Substring(endTagIndex + innerEndTag.Length);
+                        endTagIndex = processing.IndexOf(innerEndTag);
+                        contentEndTagIndex += endTagIndex + innerEndTag.Length;
+                        int offsetOld = offset;
+                        offset += content.Substring(content.Substring(offset).IndexOf(innerTagTruncated) + 1).IndexOf(innerTagTruncated);
+                        if (offset > contentEndTagIndex || offset == -1)
+                        {
+                            offset = offsetOld;
+                            break;
+                        }
+                    }
+                }
+                content = content.Substring(0, contentEndTagIndex);//-innerEndTag.length
+                result.Add(content);
+                i++;
+
+                processing = processing.Substring(processing.IndexOf(innerEndTag) + innerEndTag.Length);
+                cleanedText = processing;
+            }
+      
+            ///it should have exited in the while, when tag==endtag
+            return null;
+        }
 
         public static string[] getSpanContent(string rawText, Type expectedType, out string cleanedText)
         {
+            return getContent(rawText, expectedType, out cleanedText, 2);
+        }
+
+        public static string[] getContent(string rawText, Type expectedType, out string cleanedText, int nestCount)
+        {
             //in case there are other neted tags that have more than 2, this can be moved to parameter
-            int nestCount = 2;
+            
             string[] result = new string[nestCount];
             int endIndex = -1;
             string content =rawText;
@@ -160,47 +242,30 @@ namespace Baka_Tsuki_Downloader
 
             ///if this is -1, there is a tag that is not closes
             endIndex = content.IndexOf('>');
-            content = content.Substring(endIndex + 1);
-
-            endIndex = content.IndexOf('>');
             ////TODO this does not feel quite right
             while (content[endIndex + 1] == '<')
             {
-
                 ///endindex -1 should not occur
                 content = content.Substring(endIndex + 1);
                 endIndex = content.IndexOf('>');
-                //int tempIndex = content.IndexOf('>');
-                /*   if (tempIndex == -1)
-                       break;
-                   endIndex = tempIndex;*/
 
             }
             content = content.Substring(endIndex + 1);
 
-            int endlnCount = 0;
-            while (content[endlnCount] == '\n')
-            {
-                endlnCount++;
-            }
-            cleanedText = content.Substring(endlnCount);
-            /*string endTag = tags[(int)expectedType].Replace("<", "</");
-            int endTagIndex = rawText.IndexOf(endTag);*/
 
-            /* string semiformated = rawText;
-             while (semiformated[endIndex + endTag.Length] == '<' && semiformated[endIndex + endTag.Length + 1] == '/')
-             {
-                 string temp = semiformated.Substring(endIndex);
-             }*/
+            cleanedText = removeEndlinesFromBeginning(content);
 
-            /*int isEndLine = 0;
-            while (rawText.Length > endTagIndex && rawText[endTagIndex + endTag.Length + isEndLine - 1] != '\n')
-            {
-                isEndLine++;
-            }
-            cleanedText = rawText.Substring(endTagIndex + endTag.Length + isEndLine);*/
             return result;
         }
 
+        private static string removeEndlinesFromBeginning(string toClean)
+        {
+            int endlnCount = 0;
+            while (toClean[endlnCount] == '\n')
+            {
+                endlnCount++;
+            }
+            return toClean.Substring(endlnCount);
+        }
     }
 }
