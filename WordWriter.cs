@@ -55,7 +55,7 @@ namespace Baka_Tsuki_Downloader
 
             start = 0;
             end = 0;
-   
+            doc.Endnotes.NumberStyle = WdNoteNumberStyle.wdNoteNumberStyleArabic;
         }
 
         public void Title(string title)
@@ -228,8 +228,25 @@ namespace Baka_Tsuki_Downloader
             }
         }
 
+
+        /// <summary>
+        /// Does not work 
+        /// </summary>
+        /// <param name="text"></param>
         public void Footnote(string text)
         {
+            rng = doc.Bookmarks.get_Item(ref oEndOfDoc).Range;
+            doc.Footnotes.Add(rng, oMissing, text);
+        }
+
+        public void Endnote(string text)
+        {
+            rng = doc.Bookmarks.get_Item(ref oEndOfDoc).Range;
+            //rng.Move(WdUnits.wdParagraph,3);
+            parag = doc.Content.Paragraphs.Add(rng);
+            //parag.Range.Text = "Where?";
+            //parag.Range.set_Style(WdBuiltinStyle.wdStyleNormal);
+            doc.Endnotes.Add(rng, oMissing, text);
         }
 
         /// <summary>

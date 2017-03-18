@@ -36,11 +36,12 @@ namespace Baka_Tsuki_Downloader
         public static void Convert(string sourcefile, string destFile)
         {
             Logger.Start("Read & Convert");
+            Console.WriteLine("Reading soulrce file");
             string html = File.ReadAllText(path + sourcefile);
-            Console.WriteLine("File read");
+            Console.WriteLine("Creating WordBuilder");
             WordWriter wordWriter = new WordWriter(destFile);
-            Console.WriteLine("WordBuilder created");
 
+            Console.WriteLine("Creating Parser");
             StringParser content = new StringParser(html);
 
 
@@ -52,11 +53,10 @@ namespace Baka_Tsuki_Downloader
             wordWriter.Title(title, "Yuu", volume);
 
 
-            //TOOD:Handle <Pre>, <li>, images, furigana substitute
+            //TOOD:Handle <Pre>
             content = new StringParser(content.Substring("<h2>", "<td> Back to <a"));
 
-            //StringParser Chapter = new StringParser(content.Substring(null, "<h2>"));
-            //Chapter = new StringParser(Chapter.Substring("<p>", null));
+            Console.WriteLine("Starting Conversion");
             string[] chapters = content.ToString().Split(chapterSeparator, StringSplitOptions.RemoveEmptyEntries);
 
             Logger.Stop("Read & Convert");
@@ -75,6 +75,7 @@ namespace Baka_Tsuki_Downloader
                 
 
                 //inserting everything at once with \n instead of paragraph by paragraph increased speed by ~1000 times
+                ///TODO change br similar to div
                 string chapterContent = chapter.Replace("<p>", "").Replace("</p>","").Replace("<br />","\n").Replace("&lt;","<lt>").Replace("&gt;","<gt>");
                 //wordWriter.Paragraph(chapter);
 
@@ -108,7 +109,8 @@ namespace Baka_Tsuki_Downloader
                     {
                         if (buffer.Length != 0)
                         {
-                            wordWriter.Paragraph(buffer,spaceBefore,spaceAfter);
+                            wordWriter.Paragraph(TagType.removeEndlinesFromEnd(buffer),spaceBefore,spaceAfter);
+                            buffer = "";
                             spaceBefore = spaceAfter = -1;
                         }
 
@@ -127,6 +129,12 @@ namespace Baka_Tsuki_Downloader
                                 wordWriter.SubChapter(subtitle);
                                 spaceBefore = spaceAfter = -1;
                                 break;
+                            /*case (TagType.Type.sup):
+                                WriteWarning("Attempting sup");
+                                string footNote = TagType.getNestedContent(chapterContent, TagType.Type.sup, out chapterContent)[0];
+                                wordWriter.Endnote(footNote + "Explanation");
+
+                                break;*/
                             case TagType.Type.div:
                                 spaceBefore += spaceBefore == -1 ? 3 : 1;
                                 chapterContent = chapterContent.Substring(closeBracketIndex + 1);
@@ -166,6 +174,14 @@ namespace Baka_Tsuki_Downloader
                                 case (TagType.Type.lt):
                                     toMod = toMod.Replace(tag, "<");
                                     break;
+                                case (TagType.Type.sup):
+                                    WriteWarning("Attempting sup");
+                                    toMod = toMod.Replace(tag, "");
+                                    string footNote = TagType.getNestedContent(chapterContent, TagType.Type.sup, out chapterContent)[0];
+
+                                    wordWriter.Endnote(footNote + "Explanation");
+                                    
+                                    break;
                                 case TagType.Type.span:
                                     toMod = toMod.Replace(tag, "");
                                     string[] spanContent = TagType.getSpanContent(chapterContent, TagType.Type.span, out chapterContent);
@@ -181,13 +197,13 @@ namespace Baka_Tsuki_Downloader
 
                         if (buffer.Length != 0)
                         {
-                            chapterContent = buffer + chapterContent;
+                            chapterContent = buffer + TagType.removeEndlinesFromEnd(chapterContent);
                             firstIndex += buffer.Length;
                             buffer = "";
                         }
                             
                         ///case 2.original, i.e. no inparagraph tag
-                        wordWriter.Paragraph(chapterContent.Substring(0, firstIndex),spaceBefore,spaceAfter);
+                        wordWriter.Paragraph(TagType.removeEndlinesFromEnd(chapterContent.Substring(0, firstIndex)),spaceBefore,spaceAfter);
                         spaceBefore = spaceAfter = -1;
                         chapterContent = chapterContent.Substring(firstIndex);
                         
@@ -201,14 +217,9 @@ namespace Baka_Tsuki_Downloader
                             buffer = "";
                         }
                         ///TODO replace this with the method
-                        int lastCharPos = chapterContent.Length - 1;
+                        chapterContent = TagType.removeEndlinesFromEnd(chapterContent);
 
-                        while (chapterContent[lastCharPos] == '\n')
-                        {
-                            lastCharPos--;
-                        }
-
-                        wordWriter.Paragraph(chapterContent.Substring(0,lastCharPos),spaceBefore,spaceAfter);
+                        wordWriter.Paragraph(chapterContent,spaceBefore,spaceAfter);
                         spaceBefore = spaceAfter = -1;
                         chapterContent = "";
                     }

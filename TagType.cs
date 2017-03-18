@@ -11,7 +11,8 @@ namespace Baka_Tsuki_Downloader
     {
         public enum Type {h1=0, h2, h3, div, ul, li, gt, lt, sup, span, img, divOpen, uncategorized};
         private static string[] tags= { "<h1>", "<h2>", "<h3>", "</div>" ,"<ul>", "<li>", "<gt>", "<lt>", "<sup", "<span", "<img", "<div" };
-        private readonly static Type[] inParagraphTags = { Type.lt, Type.gt , Type.span};
+        private readonly static Type[] openTags = { Type.sup, Type.span, Type.img, Type.div };
+        private readonly static Type[] inParagraphTags = { Type.lt, Type.gt, Type.sup, Type.span};
 
         /// <summary>
         /// Get the type of a tag.
@@ -110,7 +111,7 @@ namespace Baka_Tsuki_Downloader
         public static string[] getNestedContent(string rawText, Type expectedOuterType, out string cleanedText)
         {
             List<String> result = new List<string>();
-            string outerEndTag = tags[(int)expectedOuterType].Insert(1, "/") + (expectedOuterType.Equals(Type.span)?">":"");
+            string outerEndTag = tags[(int)expectedOuterType].Insert(1, "/") + (openTags.Contains(expectedOuterType)?">":"");
 
             string processing = rawText;
             ///this should get the correct content wether the initial tag is included or not, even if there is unnecessary text before it
@@ -138,7 +139,7 @@ namespace Baka_Tsuki_Downloader
                 string innerTagTruncated = innerTag;
                 if (innerTag.Contains(" "))
                 {
-                    innerTagTruncated = innerTag.Substring(innerTag.IndexOf(" "));
+                    innerTagTruncated = innerTag.Substring(0,innerTag.IndexOf(" "));
                     innerEndTag = innerTagTruncated + ">";
                 }
                 else
@@ -259,6 +260,16 @@ namespace Baka_Tsuki_Downloader
                 endlnCount++;
             }
             return toClean.Substring(endlnCount);
+        }
+
+        public static string removeEndlinesFromEnd(string toClean)
+        {
+            int endlnPos = toClean.Length - 1;
+            while (toClean[endlnPos] == '\n')
+            {
+                endlnPos--;
+            }
+            return toClean.Substring(0,endlnPos);
         }
     }
 }
