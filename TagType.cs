@@ -143,7 +143,7 @@ namespace Baka_Tsuki_Downloader
                 ///exit flag/actual exit rather
                 if (innerTag.Equals(outerEndTag))
                 {
-                    cleanedText = cleanedText.Substring(outerEndTag.Length);
+                    cleanedText = cleanedText.Substring(firstBracket + outerEndTag.Length);
                     cleanedText = removeEndlinesFromBeginning(cleanedText);
                     return result.ToArray();
                 }

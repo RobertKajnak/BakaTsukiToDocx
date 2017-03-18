@@ -132,7 +132,7 @@ namespace Baka_Tsuki_Downloader
                                 chapterContent = chapterContent.Substring(closeBracketIndex + 1);
                                 chapterContent = TagType.removeEndlinesFromBeginning(chapterContent);
                                 break;
-                            /*case TagType.Type.ul:
+                            case TagType.Type.ul:
                                 try
                                 {
                                     string[] listElements = TagType.getNestedContent(chapterContent, TagType.Type.ul, out chapterContent);
@@ -142,7 +142,7 @@ namespace Baka_Tsuki_Downloader
                                 {
                                    WriteWarning("Malformed List detected");
                                 }
-                                break;*/
+                                break;
                             default:
                                 Console.WriteLine("Uninterpreted tag: " + tag);
                                 chapterContent = chapterContent.Substring(closeBracketIndex + 1);
