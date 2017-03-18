@@ -12,7 +12,7 @@ namespace Baka_Tsuki_Downloader
         public enum Type {h1=0, h2, h3, div, ul, li, gt, lt, sup, span, img, divOpen, uncategorized};
         private static string[] tags= { "<h1>", "<h2>", "<h3>", "</div>" ,"<ul>", "<li>", "<gt>", "<lt>", "<sup", "<span", "<img", "<div" };
         private readonly static Type[] openTags = { Type.sup, Type.span, Type.img, Type.div };
-        private readonly static Type[] inParagraphTags = { Type.lt, Type.gt, Type.sup, Type.span};
+        private readonly static Type[] inParagraphTags = { Type.lt, Type.gt, Type.span};
 
         /// <summary>
         /// Get the type of a tag.
@@ -252,6 +252,26 @@ namespace Baka_Tsuki_Downloader
             return result;
         }
 
+        public static Dictionary<string,string> getTagAttributes(string tag)
+        {
+            int startIndex = tag.IndexOf("<");
+            int endIndex = tag.IndexOf(">");
+
+            if (startIndex != -1 && endIndex != -1)
+            {
+                Dictionary<string, string> elements = new Dictionary<string, string>(); 
+                string[] attribs = tag.Substring(startIndex, endIndex - startIndex).Split(' ');
+                for (int i = 1; i<attribs.Length; i++)
+                {
+                    string[] s = attribs[i].Split(new char[] { '=' },2);
+                    elements.Add(s[0], s[1]);
+                }
+                return elements;
+            }
+
+            return null;
+        }
+
         public static string removeEndlinesFromBeginning(string toClean)
         {
             int endlnCount = 0;
@@ -272,4 +292,6 @@ namespace Baka_Tsuki_Downloader
             return toClean.Substring(0,endlnPos);
         }
     }
+
+    
 }

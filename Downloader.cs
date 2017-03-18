@@ -129,12 +129,13 @@ namespace Baka_Tsuki_Downloader
                                 wordWriter.SubChapter(subtitle);
                                 spaceBefore = spaceAfter = -1;
                                 break;
-                            /*case (TagType.Type.sup):
+                            case (TagType.Type.sup):
                                 WriteWarning("Attempting sup");
+                                Dictionary<string,string> attribs = TagType.getTagAttributes(tag);
                                 string footNote = TagType.getNestedContent(chapterContent, TagType.Type.sup, out chapterContent)[0];
                                 wordWriter.Endnote(footNote + "Explanation");
 
-                                break;*/
+                                break;
                             case TagType.Type.div:
                                 spaceBefore += spaceBefore == -1 ? 3 : 1;
                                 chapterContent = chapterContent.Substring(closeBracketIndex + 1);
@@ -174,14 +175,14 @@ namespace Baka_Tsuki_Downloader
                                 case (TagType.Type.lt):
                                     toMod = toMod.Replace(tag, "<");
                                     break;
-                                case (TagType.Type.sup):
+                                /*case (TagType.Type.sup):
                                     WriteWarning("Attempting sup");
                                     toMod = toMod.Replace(tag, "");
                                     string footNote = TagType.getNestedContent(chapterContent, TagType.Type.sup, out chapterContent)[0];
 
                                     wordWriter.Endnote(footNote + "Explanation");
                                     
-                                    break;
+                                    break;*/
                                 case TagType.Type.span:
                                     toMod = toMod.Replace(tag, "");
                                     string[] spanContent = TagType.getSpanContent(chapterContent, TagType.Type.span, out chapterContent);

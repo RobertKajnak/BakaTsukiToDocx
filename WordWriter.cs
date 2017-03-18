@@ -243,6 +243,7 @@ namespace Baka_Tsuki_Downloader
         {
             rng = doc.Bookmarks.get_Item(ref oEndOfDoc).Range;
             //rng.Move(WdUnits.wdParagraph,3);
+            rng.Previous(WdUnits.wdCharacter);
             parag = doc.Content.Paragraphs.Add(rng);
             //parag.Range.Text = "Where?";
             //parag.Range.set_Style(WdBuiltinStyle.wdStyleNormal);
