@@ -9,8 +9,8 @@ namespace Baka_Tsuki_Downloader
 {
     static class TagType
     {
-        public enum Type {h1=0, h2, h3, ul, li, gt, lt, span, img, uncategorized};
-        private static string[] tags= { "<h1>", "<h2>", "<h3>", "<ul>", "<li>", "<gt>", "<lt>", "<span", "<img" };
+        public enum Type {h1=0, h2, h3, div, ul, li, gt, lt, span, img, divOpen, uncategorized};
+        private static string[] tags= { "<h1>", "<h2>", "<h3>", "</div>" ,"<ul>", "<li>", "<gt>", "<lt>", "<span", "<img", "<div" };
         private readonly static Type[] inParagraphTags = { Type.lt, Type.gt , Type.span};
 
         /// <summary>
@@ -20,12 +20,15 @@ namespace Baka_Tsuki_Downloader
         /// <returns></returns>
         public static Type getType(string tag)
         {
+            ///TODO replace this with 2 fors
             if (Regex.IsMatch(tag, tags[(int)Type.h1]))
                 return Type.h1;
             else if (tag.Equals(tags[(int)Type.h2]))
                 return Type.h2;
             else if (tag.Equals(tags[(int)Type.h3]))
                 return Type.h3;
+            else if (tag.Equals(tags[(int)Type.div]))
+                return Type.div;
             else if (tag.Equals(tags[(int)Type.ul]))
                 return Type.ul;
             else if (tag.Equals(tags[(int)Type.li]))
@@ -34,8 +37,12 @@ namespace Baka_Tsuki_Downloader
                 return Type.gt;
             else if (tag.Equals(tags[(int)Type.lt]))
                 return Type.lt;
-            else if (Regex.IsMatch(tag, tags[(int)Type.span].Insert(5,".")))
+            else if (Regex.IsMatch(tag, tags[(int)Type.span].Insert(5, ".")))
                 return Type.span;
+            else if (Regex.IsMatch(tag, tags[(int)Type.img].Insert(4, ".")))
+                return Type.img;
+            else if (Regex.IsMatch(tag, tags[(int)Type.divOpen].Insert(4, ".")))
+                return Type.divOpen;
             else
                 return Type.uncategorized;
         }
@@ -131,7 +138,8 @@ namespace Baka_Tsuki_Downloader
             int i = 0;
             while (processing.Length != 0)
             {
-                string innerTag = processing.Substring(processing.IndexOf('<'), processing.IndexOf('>') + 1);
+                int firstBracket = processing.IndexOf('<');
+                string innerTag = processing.Substring(firstBracket, processing.IndexOf('>') - firstBracket + 1);
                 ///exit flag/actual exit rather
                 if (innerTag.Equals(outerEndTag))
                 {
@@ -258,7 +266,7 @@ namespace Baka_Tsuki_Downloader
             return result;
         }
 
-        private static string removeEndlinesFromBeginning(string toClean)
+        public static string removeEndlinesFromBeginning(string toClean)
         {
             int endlnCount = 0;
             while (toClean[endlnCount] == '\n')

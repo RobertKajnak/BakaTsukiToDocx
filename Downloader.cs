@@ -86,9 +86,9 @@ namespace Baka_Tsuki_Downloader
                 //TODO handle '&' for italic etc. tags 
 
                 string buffer = "";
+                float spaceBefore = -1, spaceAfter = -1;
                 while (chapterContent.Length != 0)
                 {
-
                     int firstIndex = chapterContent.IndexOf('<');
 
                     int closeBracketIndex = chapterContent.IndexOf('>');
@@ -102,39 +102,47 @@ namespace Baka_Tsuki_Downloader
                         tagType = TagType.getType(tag);
                         isInParagraphTag = TagType.isInParagraphTag(tag);
                     }
+                    ///represents the empty space before paragraphs, in case of div or similar tags; -1 is the default scale
                     ///case 1: there is a tag, and it is at the beginning of the text
                     if (firstIndex == 0 && !isInParagraphTag)
                     {
                         if (buffer.Length != 0)
                         {
-                            wordWriter.Paragraph(buffer);
+                            wordWriter.Paragraph(buffer,spaceBefore,spaceAfter);
+                            spaceBefore = spaceAfter = -1;
                         }
 
                         switch (tagType)
                         {
                             case TagType.Type.h1:
-                                Console.Write("Detected header 1. This was not expected");
+                                WriteWarning("Detected header 1. This was not expected");
+                                chapterContent = chapterContent.Substring(closeBracketIndex + 1);
                                 break;
                             case TagType.Type.h2:
-                                Console.WriteLine("chapter title has not been handled properly");
+                                WriteWarning("Chapter title has not been handled properly");
+                                chapterContent = chapterContent.Substring(closeBracketIndex + 1);
                                 break;
                             case TagType.Type.h3:
                                 string subtitle = TagType.getContent(chapterContent, TagType.Type.h3,out chapterContent);
                                 wordWriter.SubChapter(subtitle);
+                                spaceBefore = spaceAfter = -1;
                                 break;
-                            case TagType.Type.ul:
-                                //Console.WriteLine("List not handled properly...");
-                                //chapterContent = chapterContent.Substring(closeBracketIndex + 1);
-                                try {
+                            case TagType.Type.div:
+                                spaceBefore += spaceBefore == -1 ? 3 : 1;
+                                chapterContent = chapterContent.Substring(closeBracketIndex + 1);
+                                chapterContent = TagType.removeEndlinesFromBeginning(chapterContent);
+                                break;
+                            /*case TagType.Type.ul:
+                                try
+                                {
                                     string[] listElements = TagType.getNestedContent(chapterContent, TagType.Type.ul, out chapterContent);
                                     wordWriter.BulletList(listElements);
-                                    foreach (string s in listElements);
                                 }
                                 catch
                                 {
-                                    Console.WriteLine("Malformed List detected");
+                                   WriteWarning("Malformed List detected");
                                 }
-                                break;
+                                break;*/
                             default:
                                 Console.WriteLine("Uninterpreted tag: " + tag);
                                 chapterContent = chapterContent.Substring(closeBracketIndex + 1);
@@ -179,7 +187,8 @@ namespace Baka_Tsuki_Downloader
                         }
                             
                         ///case 2.original, i.e. no inparagraph tag
-                        wordWriter.Paragraph(chapterContent.Substring(0, firstIndex));
+                        wordWriter.Paragraph(chapterContent.Substring(0, firstIndex),spaceBefore,spaceAfter);
+                        spaceBefore = spaceAfter = -1;
                         chapterContent = chapterContent.Substring(firstIndex);
                         
                     }
@@ -191,6 +200,7 @@ namespace Baka_Tsuki_Downloader
                             chapterContent = buffer + chapterContent;
                             buffer = "";
                         }
+                        ///TODO replace this with the method
                         int lastCharPos = chapterContent.Length - 1;
 
                         while (chapterContent[lastCharPos] == '\n')
@@ -198,7 +208,8 @@ namespace Baka_Tsuki_Downloader
                             lastCharPos--;
                         }
 
-                        wordWriter.Paragraph(chapterContent.Substring(0,lastCharPos));
+                        wordWriter.Paragraph(chapterContent.Substring(0,lastCharPos),spaceBefore,spaceAfter);
+                        spaceBefore = spaceAfter = -1;
                         chapterContent = "";
                     }
                 
@@ -212,6 +223,14 @@ namespace Baka_Tsuki_Downloader
             Logger.PutDelimiter();
             Console.WriteLine("Writing data to Word document finished");
             wordWriter.SaveAndQuit();
+        }
+
+        public static void WriteWarning(string message)
+        {
+            ConsoleColor oldColor = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine(message);
+            Console.ForegroundColor = oldColor;
         }
     }
  }
