@@ -108,7 +108,9 @@ namespace Baka_Tsuki_Downloader
         /// <param name="text">The title of the chapter</param>
         public void Chapter(string title)
         {
-            parag.Range.InsertBreak(WdBreakType.wdPageBreak);//insert page break (ctrl+enter)
+            if (parag != null) { 
+                parag.Range.InsertBreak(WdBreakType.wdPageBreak);//insert page break (ctrl+enter)
+            }
             rng = doc.Bookmarks.get_Item(ref oEndOfDoc).Range;//sets the cursor to the end of the document
 
             parag = doc.Content.Paragraphs.Add(rng);

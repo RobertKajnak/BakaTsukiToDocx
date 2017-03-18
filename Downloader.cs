@@ -49,7 +49,7 @@ namespace Baka_Tsuki_Downloader
             int volume;
             Int32.TryParse(titleHtml.SubstringLast(":Volume", " - Baka-Tsuki").ToString(), out volume);
 
-            wordWriter.Title(title, "Yuu", volume);
+            //wordWriter.Title(title, "Yuu", volume);
 
 
             //TOOD:Handle <Pre>, <li>, images, furigana substitute
