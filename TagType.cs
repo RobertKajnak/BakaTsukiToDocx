@@ -9,8 +9,8 @@ namespace Baka_Tsuki_Downloader
 {
     static class TagType
     {
-        public enum Type {h1=0, h2, h3, div, ul, li, gt, lt, span, img, divOpen, uncategorized};
-        private static string[] tags= { "<h1>", "<h2>", "<h3>", "</div>" ,"<ul>", "<li>", "<gt>", "<lt>", "<span", "<img", "<div" };
+        public enum Type {h1=0, h2, h3, div, ul, li, gt, lt, sup, span, img, divOpen, uncategorized};
+        private static string[] tags= { "<h1>", "<h2>", "<h3>", "</div>" ,"<ul>", "<li>", "<gt>", "<lt>", "<sup", "<span", "<img", "<div" };
         private readonly static Type[] inParagraphTags = { Type.lt, Type.gt , Type.span};
 
         /// <summary>
@@ -21,30 +21,15 @@ namespace Baka_Tsuki_Downloader
         public static Type getType(string tag)
         {
             ///TODO replace this with 2 fors
-            if (Regex.IsMatch(tag, tags[(int)Type.h1]))
-                return Type.h1;
-            else if (tag.Equals(tags[(int)Type.h2]))
-                return Type.h2;
-            else if (tag.Equals(tags[(int)Type.h3]))
-                return Type.h3;
-            else if (tag.Equals(tags[(int)Type.div]))
-                return Type.div;
-            else if (tag.Equals(tags[(int)Type.ul]))
-                return Type.ul;
-            else if (tag.Equals(tags[(int)Type.li]))
-                return Type.li;
-            else if (tag.Equals(tags[(int)Type.gt]))
-                return Type.gt;
-            else if (tag.Equals(tags[(int)Type.lt]))
-                return Type.lt;
-            else if (Regex.IsMatch(tag, tags[(int)Type.span].Insert(5, ".")))
-                return Type.span;
-            else if (Regex.IsMatch(tag, tags[(int)Type.img].Insert(4, ".")))
-                return Type.img;
-            else if (Regex.IsMatch(tag, tags[(int)Type.divOpen].Insert(4, ".")))
-                return Type.divOpen;
-            else
-                return Type.uncategorized;
+            for (int i=0; i<tags.Length; i++)
+            {
+                if (tag.Contains(tags[i]))
+                {
+                    return (Type)i;
+                }
+            }
+            
+            return Type.uncategorized;
         }
 
         /// <summary>
