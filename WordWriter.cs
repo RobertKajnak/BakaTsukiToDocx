@@ -98,7 +98,7 @@ namespace Baka_Tsuki_Downloader
                 parag.Range.InsertParagraphAfter();
             }
 
-            parag.Range.InsertBreak(WdBreakType.wdPageBreak);
+            //parag.Range.InsertBreak(WdBreakType.wdPageBreak);
             tocBeginning = doc.Bookmarks.get_Item(ref oEndOfDoc).Range;
         }
 
