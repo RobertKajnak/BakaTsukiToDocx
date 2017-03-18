@@ -27,6 +27,12 @@ namespace Baka_Tsuki_Downloader
         private bool isTerminated = false;
 
         /// <summary>
+        ///  if i Actually knew where these were stored, that would be great
+        /// </summary>
+        private int defaultSpaceAfterNormalParagrahp = 8;
+        private int defaultSpaceBeforeNormalParagraph = 0;
+
+        /// <summary>
         /// In order to properly close document, invoking <see cref="SaveAndQuit"/> is necessary
         /// As a general rule, page breaks and new lines will be added after starting a section to the 
         /// previous one, not after finishing a section. This will avoid situations where the new 
@@ -125,15 +131,65 @@ namespace Baka_Tsuki_Downloader
             parag.Range.InsertParagraphAfter();
         }
 
+        /// <summary>
+        /// Creates a paragraph with normal style, but with custum spacing before and after
+        /// </summary>
+        /// <param name="text"> Content of the paragraph </param>
+        /// <param name="spaceBefore"> -1 for default value. This represent the multiplier for the default value</param>
+        /// <param name="spaceAfter"> -1 for default value. This represent the multiplier for the default value </param>
+        public void Paragraph(string text, float spaceBefore, float spaceAfter)
+        {
+            rng = doc.Bookmarks.get_Item(ref oEndOfDoc).Range;//sets the cursor to the end of the document
+            if (spaceAfter != -1)
+            {
+                if (parag.Format.SpaceAfter == 0)
+                {
+                    parag.Format.SpaceAfter = 8 * spaceAfter;
+                }
+                else
+                {
+                    parag.Format.SpaceAfter *= spaceAfter;
+                }
+            }            
+            if (spaceBefore != -1)
+            {
+                if (parag.Format.SpaceBefore == 0)
+                {
+                    parag.Format.SpaceBefore = 8 * spaceBefore;
+                }
+                else
+                {
+                    parag.Format.SpaceBefore *= spaceBefore;
+                }
+            }
+
+            parag = doc.Content.Paragraphs.Add(rng);
+            int endLineIndex = text.IndexOf("\n");
+            if ((spaceAfter != -1 || spaceBefore!=-1) && endLineIndex!=-1 && endLineIndex!=text.Length-1)
+            {
+                string[] splitText = text.Split(new char[] { '\n' }, 2);
+                parag.Range.Text = splitText[0] + (splitText[0][splitText[0].Length-1]=='\n'?"":"\n");//whitout the \\n the last line is omitted
+                parag.Range.set_Style(WdBuiltinStyle.wdStyleNormal);
+
+                Paragraph(splitText[1]);
+            }
+            else
+            {
+                parag.Range.Text = text + (text[text.Length - 1] == '\n' ? "" : "\n");//whitout the \\n the last line is omitted
+                parag.Range.set_Style(WdBuiltinStyle.wdStyleNormal);
+            }
+
+        }
+
         public void Paragraph(string text)
         {
             rng = doc.Bookmarks.get_Item(ref oEndOfDoc).Range;//sets the cursor to the end of the document
             //parag.Range.InsertParagraph();//adds newLine
 
             parag = doc.Content.Paragraphs.Add(rng);
-            parag.Range.Text = text + "\n";
+            parag.Range.Text = text + (text[text.Length - 1] == '\n' ? "" : "\n");
             parag.Range.set_Style(WdBuiltinStyle.wdStyleNormal);
-            parag.Format.SpaceAfter = 6;
+            //parag.Format.SpaceAfter = 6;
             //parag.Range.InsertParagraphAfter();
         }
 
