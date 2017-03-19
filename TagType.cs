@@ -9,9 +9,9 @@ namespace Baka_Tsuki_Downloader
 {
     static class TagType
     {
-        public enum Type {h1=0, h2, h3, div, ul, li, gt, lt, sup, span, img, divOpen, uncategorized};
-        private static string[] tags= { "<h1>", "<h2>", "<h3>", "</div>" ,"<ul>", "<li>", "<gt>", "<lt>", "<sup", "<span", "<img", "<div" };
-        private readonly static Type[] openTags = { Type.sup, Type.span, Type.img, Type.div };
+        public enum Type {h1=0, h2, h3, div, ul, li, gt, lt, sup, span, img, a, divOpen, uncategorized};
+        private static string[] tags= { "<h1>", "<h2>", "<h3>", "</div>" ,"<ul>", "<li>", "<gt>", "<lt>", "<sup", "<span", "<img", "<a" , "<div" };
+        private readonly static Type[] openTags = { Type.sup, Type.span, Type.img, Type.divOpen };
         private readonly static Type[] inParagraphTags = { Type.lt, Type.gt, Type.span};
 
         /// <summary>
@@ -257,14 +257,62 @@ namespace Baka_Tsuki_Downloader
             int startIndex = tag.IndexOf("<");
             int endIndex = tag.IndexOf(">");
 
+            ///TODO need to iterate over it, functions will not suffice
             if (startIndex != -1 && endIndex != -1)
             {
-                Dictionary<string, string> elements = new Dictionary<string, string>(); 
-                string[] attribs = tag.Substring(startIndex, endIndex - startIndex).Split(' ');
-                for (int i = 1; i<attribs.Length; i++)
+                Dictionary<string, string> elements = new Dictionary<string, string>();
+
+                List<string> attribs = new List<String>();
+                string s = "";
+                tag = tag.Substring(tag.IndexOf("<"));
+                tag = tag.Split(new char[] { ' ' }, 2)[1];
+                bool inQuotes = false;
+                bool ignoreSpecial = false;
+
+                ///The order of checking characters is critical
+                foreach (char c in tag)
                 {
-                    string[] s = attribs[i].Split(new char[] { '=' },2);
-                    elements.Add(s[0], s[1]);
+                    if (c == '>')
+                    {
+                        attribs.Add(s);
+                        break;
+                    }
+
+                    if (c == '\\' && !ignoreSpecial)
+                    {
+                        ignoreSpecial = true;
+                        ///TODO a testcase if the continue should be used here. Maybe including the backslash is needed
+                        continue;
+                    }
+
+                    if (inQuotes && c == '"' && !ignoreSpecial)
+                    {
+                        inQuotes = false;
+                        continue;
+                    }
+
+                    if (c == '"' && !ignoreSpecial)
+                    {
+                        inQuotes = true;
+                        continue;
+                    }
+                   
+                    if (c == ' ' && !inQuotes)
+                    {
+                        attribs.Add(s);
+                        s = "";
+                        continue;
+                    }
+                    ignoreSpecial = false;
+                    s += c;
+                }
+                ///does not work if they are spaces between quotation marks
+                //string[] attribs = tag.Substring(startIndex, endIndex - startIndex).Split(' ');
+
+                foreach (string attrib in attribs)
+                {
+                    string[] sa = attrib.Split(new char[] { '=' },2);
+                    elements.Add(sa[0], sa[1]);
                 }
                 return elements;
             }
@@ -275,7 +323,8 @@ namespace Baka_Tsuki_Downloader
         public static string removeEndlinesFromBeginning(string toClean)
         {
             int endlnCount = 0;
-            while (toClean[endlnCount] == '\n')
+            int length = toClean.Length;
+            while (endlnCount <= length && toClean[endlnCount] == '\n')
             {
                 endlnCount++;
             }
@@ -285,7 +334,7 @@ namespace Baka_Tsuki_Downloader
         public static string removeEndlinesFromEnd(string toClean)
         {
             int endlnPos = toClean.Length - 1;
-            while (toClean[endlnPos] == '\n')
+            while (endlnPos > 0 && toClean[endlnPos] == '\n')
             {
                 endlnPos--;
             }

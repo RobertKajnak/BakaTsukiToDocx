@@ -137,9 +137,33 @@ namespace Baka_Tsuki_Downloader
 
                                 break;
                             case TagType.Type.div:
-                                spaceBefore += spaceBefore == -1 ? 3 : 1;
+                               // spaceBefore += spaceBefore == -1 ? 3 : 1;
                                 chapterContent = chapterContent.Substring(closeBracketIndex + 1);
                                 chapterContent = TagType.removeEndlinesFromBeginning(chapterContent);
+                                break;
+                            case TagType.Type.divOpen:
+                                string [] tagContent = TagType.getNestedContent(chapterContent, TagType.Type.divOpen, out chapterContent);
+                                foreach (string tagc in tagContent)
+                                {
+                                    Console.WriteLine(tagc);
+                                }
+                                //chapterContent = chapterContent.Substring(closeBracketIndex + 1);
+                                break;
+                            case TagType.Type.a:
+                                Dictionary<string, string> ats = TagType.getTagAttributes(tag);
+
+                                try {
+                                    WriteWarning("Link ignored: " + tag + "/w link" + ats["hfref"]); }
+                                catch {
+                                    WriteWarning("Link with no href detected. Skipping"); }
+
+                                chapterContent = chapterContent.Substring(closeBracketIndex + 1);
+                                break;
+                            case TagType.Type.img:
+                                ///this would only get the thumbnail
+                                //Dictionary<string, string> ats = TagType.getTagAttributes(tag);
+                                //WriteWarning("Image ignored: " + ats["alt"]);
+                                chapterContent = chapterContent.Substring(closeBracketIndex + 1);
                                 break;
                             case TagType.Type.ul:
                                 try
