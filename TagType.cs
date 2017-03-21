@@ -107,6 +107,191 @@ namespace Baka_Tsuki_Downloader
             return content;
         }
 
+        public class Tag
+        {
+            public string name;
+            public List<Tag> innerTags;
+            public Dictionary<string, string> attributes;
+            public string content;
+
+            public Tag()
+            {
+                innerTags = new List<Tag>();
+                attributes = new Dictionary<string, string>();
+            }
+
+        }
+
+        /// <summary>
+        /// Parses a string to get the content and attributes of the first tag it finds. The tag contains any inner tags as well. 
+        /// It should not containt any &gt; or &lt; sign that is not a part of a tag. Ignores any additional text before or after the said tag
+        /// </summary>
+        /// <param name="rawTest"> the text to be parsed </param>
+        /// <returns> The tag class </returns>
+        public static Tag getTagComplete(string rawTest)
+        {
+            string s;
+            return getTagComplete(rawTest, out s, out s);
+        }
+        
+        /// <summary>
+        /// Parses a string to get the content and attributes of the first tag it finds. The tag contains any inner tags as well. 
+        /// It should not containt any &gt; or &lt; sign that is not a part of a tag 
+        /// </summary>
+        /// <param name="rawText"> The text that contains the tag </param>
+        /// <param name="contentBefore"> Any text that was before the first tag</param>
+        /// <param name="contentAfter"> Any text that was after the closing tag of the first open tag </param>
+        /// <returns> the Tag containing all elements </returns>
+        public static Tag getTagComplete(string rawText,out string contentBefore, out string contentAfter)
+        {
+            int startIndex = rawText.IndexOf("<");
+            if (startIndex == -1 || !rawText.Contains(">"))
+            {
+                contentBefore = "";
+                contentAfter = "";
+                return null;
+            }
+
+            contentBefore = rawText.Substring(0, startIndex);
+            contentAfter = "";
+            Tag tag = new Tag();
+
+            ///flags:
+            bool searchingForTagName = true, inContent = false, inQuotes = false, inContentTagOpened=false;
+          //  int pos = startIndex;
+            string s = "";
+            string parsed = rawText.Substring(startIndex + 1);
+
+            //foreach (char c in parsed)
+            char c;
+            for (int i = 0;i<parsed.Length;i++)
+            {
+                c = parsed[i];
+                //pos++;
+                if (inContentTagOpened)
+                {
+                    /// if there is a space right after the &lt;, it isn't considered a correct tag
+                    if (c == ' ')
+                    {
+                        s += '<' + ' ';
+                        continue;
+                    }
+                    ///if I'm not mistaken, this should most definately mean, that the
+                    if (c == '/')
+                    {
+                        int ed = parsed.Substring(i - 1).IndexOf(">");
+                        if (ed != -1 && parsed.Substring(i - 1, ed + 1).Equals("</" + tag.name + ">"))
+                        {
+                            contentAfter = parsed.Substring(i + ed);
+                            tag.content += s;
+                            return tag;
+                        }
+                        else
+                        {
+                            throw new Exception("Something went wrong");
+                        }
+                    }
+
+                    string bef, aft;
+                    tag.innerTags.Add(getTagComplete(parsed.Substring(i - 1),out bef,out aft));
+                    i += (parsed.Length - i) - aft.Length;
+                    continue;
+
+                }
+
+                if (searchingForTagName && (c == ' ' || c == '>'))
+                {
+                    searchingForTagName = false;
+                    tag.name = s;
+                    s = "";
+                    continue;
+                }
+
+                if (c == '>' && !inQuotes && !inContent)
+                {
+                    inContent = true;
+                    if (s.Length > 3 && s.Contains("="))
+                    {
+                        if (s.IndexOf("=") == s.Length)
+                        {
+                            tag.attributes.Add(s.Substring(0, s.Length - 1), "");
+                        }
+                        else
+                        {
+                            string[] sa = s.Split(new char[] { '=' }, 2);
+                            tag.attributes.Add(sa[0], sa[1]);
+                        }
+                    }
+                    s = "";
+                    continue;
+                }
+
+                /// A tag that doesnt have end, but is closed in itself i.e. &lt;div /&gt;
+                if (c=='/' && (!inQuotes && parsed[i+1] == '>'))
+                {
+                    tag.content = "";
+
+                    if(s.Length > 3 && s.Contains("="))
+                    {
+                        if (s.IndexOf("=") == s.Length)
+                        {
+                            tag.attributes.Add(s.Substring(0, s.Length - 1), "");
+                        }
+                        else
+                        {
+                            string[] sa = s.Split(new char[] { '=' }, 2);
+                            tag.attributes.Add(sa[0], sa[1]);
+                        }
+                    }
+                    contentAfter = parsed.Substring(i + 2);
+                    return tag;
+                }
+
+                if (c== '<' && inContent)
+                {
+                    inContentTagOpened = true;
+                    continue;
+                }
+
+                // if c=='<' && !incontent it should add it
+
+                if (inQuotes && c == '"')
+                {
+                    inQuotes = false;
+                    continue;
+                }
+
+                if (c == '"')
+                {
+                    inQuotes = true;
+                    continue;
+                }
+
+                ///any other cases of c==&gt; should be handled by this point
+                if (c == ' ' && !inQuotes && !inContent)
+                {
+                    ///the name of the tag cannot contain '='
+                    if (s.Length > 3 && s.Contains("="))
+                    {
+                        if (s.IndexOf("=") == s.Length)
+                        {
+                            tag.attributes.Add(s.Substring(0, s.Length - 1), "");
+                        }
+                        else
+                        {
+                            string[] sa = s.Split(new char[] { '=' }, 2);
+                            tag.attributes.Add(sa[0], sa[1]);
+                        }
+                    }
+                    s = "";
+                    continue;
+                }
+                s += c;
+            }
+
+            return tag;
+        }
+
         /// TODO(tentative) this might actually be a lot faster if a single char array was used (i.e. the content of the string not copied n times)
         public static string[] getNestedContent(string rawText, Type expectedOuterType, out string cleanedText)
         {

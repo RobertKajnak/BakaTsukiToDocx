@@ -58,7 +58,8 @@ namespace Baka_Tsuki_Downloader
 
             Console.WriteLine("Starting Conversion");
             string[] chapters = content.ToString().Split(chapterSeparator, StringSplitOptions.RemoveEmptyEntries);
-
+            string footNoteSection = chapters.Last();
+            chapters = chapters.Take(chapters.Length - 1).ToArray();
             Logger.Stop("Read & Convert");
             Logger.Start("Write");
             int i = 0;
@@ -83,13 +84,15 @@ namespace Baka_Tsuki_Downloader
                 string chapterTitle = TagType.getContent(chapterContent, TagType.Type.h2, out chapterContent);
                 wordWriter.Chapter(chapterTitle);
 
-
+                
                 //TODO handle '&' for italic etc. tags 
 
                 string buffer = "";
                 float spaceBefore = -1, spaceAfter = -1;
                 while (chapterContent.Length != 0)
                 {
+                    TagType.Tag tagAndContent = null;
+
                     int firstIndex = chapterContent.IndexOf('<');
 
                     int closeBracketIndex = chapterContent.IndexOf('>');
@@ -130,24 +133,27 @@ namespace Baka_Tsuki_Downloader
                                 spaceBefore = spaceAfter = -1;
                                 break;
                             case (TagType.Type.sup):
-                                WriteWarning("Attempting sup");
-                                Dictionary<string,string> attribs = TagType.getTagAttributes(tag);
-                                string footNote = TagType.getNestedContent(chapterContent, TagType.Type.sup, out chapterContent)[0];
-                                wordWriter.Endnote(footNote + "Explanation");
-
+                                string s2;
+                                tagAndContent = TagType.getTagComplete(chapterContent,out s2, out chapterContent);
+                                ///substring(1) - > skip the pound
+                                string footNoteId = tagAndContent.innerTags.ElementAt(0).attributes["href"].Substring(1);
+                                tagAndContent = TagType.getTagComplete(footNoteSection.Substring(footNoteSection.IndexOf("<li id=\"" + footNoteId)));
+                                string endNote = tagAndContent.innerTags.ElementAt(1).content;
+                                wordWriter.Endnote(endNote);
+                                Console.WriteLine("Sup id: " + footNoteId + "| content: " + endNote);
                                 break;
-                            case TagType.Type.div:
+                            /*case TagType.Type.div:
                                // spaceBefore += spaceBefore == -1 ? 3 : 1;
                                 chapterContent = chapterContent.Substring(closeBracketIndex + 1);
                                 chapterContent = TagType.removeEndlinesFromBeginning(chapterContent);
-                                break;
+                                break;*/
                             case TagType.Type.divOpen:
-                                string [] tagContent = TagType.getNestedContent(chapterContent, TagType.Type.divOpen, out chapterContent);
-                                foreach (string tagc in tagContent)
-                                {
-                                    Console.WriteLine(tagc);
-                                }
-                                //chapterContent = chapterContent.Substring(closeBracketIndex + 1);
+                                string s1;
+                                chapterContent = "Ss " + chapterContent;
+                                tagAndContent = TagType.getTagComplete(chapterContent, out s1, out chapterContent);
+                                chapterContent = TagType.removeEndlinesFromBeginning(chapterContent);
+                                string imageLink = tagAndContent.innerTags.ElementAt(0).innerTags.ElementAt(0).attributes["href"];
+                                Console.WriteLine("Link to image page: " + imageLink);
                                 break;
                             case TagType.Type.a:
                                 Dictionary<string, string> ats = TagType.getTagAttributes(tag);
