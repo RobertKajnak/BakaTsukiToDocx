@@ -184,7 +184,7 @@ namespace Baka_Tsuki_Downloader
                                 break;
                             default:
                                 Console.WriteLine("Uninterpreted tag: " + tag);
-                                chapterContent = chapterContent.Substring(closeBracketIndex + 1);
+                                chapterContent = TagType.removeEndlinesFromBeginning(chapterContent.Substring(closeBracketIndex + 1));
                                 break;
                         }
                         
@@ -205,14 +205,19 @@ namespace Baka_Tsuki_Downloader
                                 case (TagType.Type.lt):
                                     toMod = toMod.Replace(tag, "<");
                                     break;
-                                /*case (TagType.Type.sup):
-                                    WriteWarning("Attempting sup");
-                                    toMod = toMod.Replace(tag, "");
-                                    string footNote = TagType.getNestedContent(chapterContent, TagType.Type.sup, out chapterContent)[0];
-
-                                    wordWriter.Endnote(footNote + "Explanation");
-                                    
-                                    break;*/
+                                case (TagType.Type.sup):
+                                    string bef;
+                                    tagAndContent = TagType.getTagComplete(toMod + chapterContent, out bef, out chapterContent);
+                                    ///substring(1) - > skip the pound
+                                    string footNoteId = tagAndContent.innerTags.ElementAt(0).attributes["href"].Substring(1);
+                                    tagAndContent = TagType.getTagComplete(footNoteSection.Substring(footNoteSection.IndexOf("<li id=\"" + footNoteId)));
+                                    string endNote = tagAndContent.innerTags.ElementAt(1).content;
+                                    wordWriter.ParagraphConditional(buffer + bef);
+                                    buffer = "";
+                                    toMod = "";
+                                    wordWriter.Endnote(endNote);
+                                    Console.WriteLine("Sup id: " + footNoteId + "| content: " + endNote);
+                                    break;
                                 case TagType.Type.span:
                                     toMod = toMod.Replace(tag, "");
                                     string[] spanContent = TagType.getSpanContent(chapterContent, TagType.Type.span, out chapterContent);

@@ -12,7 +12,7 @@ namespace Baka_Tsuki_Downloader
         public enum Type {h1=0, h2, h3, div, ul, li, gt, lt, sup, span, img, a, divOpen, uncategorized};
         private static string[] tags= { "<h1>", "<h2>", "<h3>", "</div>" ,"<ul>", "<li>", "<gt>", "<lt>", "<sup", "<span", "<img", "<a" , "<div" };
         private readonly static Type[] openTags = { Type.sup, Type.span, Type.img, Type.divOpen };
-        private readonly static Type[] inParagraphTags = { Type.lt, Type.gt, Type.span};
+        private readonly static Type[] inParagraphTags = { Type.lt, Type.gt, Type.span, Type.sup};
 
         /// <summary>
         /// Get the type of a tag.

@@ -195,6 +195,17 @@ namespace Baka_Tsuki_Downloader
             //parag.Range.InsertParagraphAfter();
         }
 
+        public void ParagraphConditional(string text)
+        {
+            rng = doc.Bookmarks.get_Item(ref oEndOfDoc).Range;//sets the cursor to the end of the document
+            //parag.Range.InsertParagraph();//adds newLine
+
+            parag = doc.Content.Paragraphs.Add(rng);
+            parag.Range.Text = text;
+            parag.Range.set_Style(WdBuiltinStyle.wdStyleNormal);
+
+        }
+
         public void Image(string location)
         {
 
