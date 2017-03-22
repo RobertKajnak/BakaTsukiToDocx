@@ -276,15 +276,26 @@ namespace Baka_Tsuki_Downloader
             {
                 rng = tocBeginning; 
             }
-                     
+
+            
 
             doc.TablesOfContents.Add(rng, true /*use heading styles*/, oMissing, oMissing, oMissing,
                                                     oMissing, oMissing, oMissing, oMissing, oMissing,
                                                     oMissing, oMissing);
             rng.InsertParagraphBefore();
-            parag = doc.Content.Paragraphs.Add(tocBeginning);
+            rng.InsertParagraphBefore();
+            parag = doc.Content.Paragraphs.Add(rng);
+            parag.Range.InsertBreak(WdBreakType.wdPageBreak);//insert page break (ctrl+enter)
+            
+            
             parag.Range.Text = "Table of contents";
             parag.Format.set_Style(WdBuiltinStyle.wdStyleHeading1);
+
+            if (atEnd)
+            {
+                rng = doc.Bookmarks.get_Item(ref oEndOfDoc).Range;
+                rng.InsertBreak(WdBreakType.wdPageBreak);
+            }
 
         }
 

@@ -49,7 +49,8 @@ namespace Baka_Tsuki_Downloader
             string title = titleHtml.SubstringLast(null, ":");
             int volume;
             Int32.TryParse(titleHtml.SubstringLast(":Volume", " - Baka-Tsuki").ToString(), out volume);
-
+            
+            ///TOD One could try going back to the collection page and search for the phrase "Written by"
             wordWriter.Title(title, "Yuu", volume);
 
 
@@ -132,7 +133,7 @@ namespace Baka_Tsuki_Downloader
                                 wordWriter.SubChapter(subtitle);
                                 spaceBefore = spaceAfter = -1;
                                 break;
-                            case (TagType.Type.sup):
+                            /*case (TagType.Type.sup):
                                 string s2;
                                 tagAndContent = TagType.getTagComplete(chapterContent,out s2, out chapterContent);
                                 ///substring(1) - > skip the pound
@@ -141,7 +142,7 @@ namespace Baka_Tsuki_Downloader
                                 string endNote = tagAndContent.innerTags.ElementAt(1).content;
                                 wordWriter.Endnote(endNote);
                                 Console.WriteLine("Sup id: " + footNoteId + "| content: " + endNote);
-                                break;
+                                break;*/
                             /*case TagType.Type.div:
                                // spaceBefore += spaceBefore == -1 ? 3 : 1;
                                 chapterContent = chapterContent.Substring(closeBracketIndex + 1);
@@ -216,7 +217,7 @@ namespace Baka_Tsuki_Downloader
                                     buffer = "";
                                     toMod = "";
                                     wordWriter.Endnote(endNote);
-                                    Console.WriteLine("Sup id: " + footNoteId + "| content: " + endNote);
+                                    //Console.WriteLine("Sup id: " + footNoteId + "| content: " + endNote);
                                     break;
                                 case TagType.Type.span:
                                     toMod = toMod.Replace(tag, "");
@@ -266,6 +267,7 @@ namespace Baka_Tsuki_Downloader
                 Logger.Lap("Write");
 
             }
+            wordWriter.TableOfContents(false);
             Logger.Stop("Write");
             Logger.PutDelimiter();
             Console.WriteLine("Writing data to Word document finished");
