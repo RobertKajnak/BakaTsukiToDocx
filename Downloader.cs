@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Net;
 
 namespace Baka_Tsuki_Downloader
 {
@@ -20,16 +21,23 @@ namespace Baka_Tsuki_Downloader
 
         }
 
+        public static void DownloadAndConvert(string URL)
+        {
+            WebClient wc = new System.Net.WebClient();
+            wc.Encoding = Encoding.UTF8;
+            string html = wc.DownloadString(URL);
+            Convert(html,null);
+        }
+
         public static void DownloadToHTML(string URL, string fileName)
         {
-            WordWriter wordWriter = new WordWriter(fileName);
+            //WordWriter wordWriter = new WordWriter(fileName);
 
             string html = new System.Net.WebClient().DownloadString(URL);
 
             System.IO.File.WriteAllText(fileName, html);
 
         }
-
 
         public static string ReadHTML(string sourceFile)
         {
@@ -45,14 +53,18 @@ namespace Baka_Tsuki_Downloader
             StringParser content = new StringParser(html);
             StringParser titleHtml = new StringParser(content.Substring("<title>", "</title"));
 
-            Console.WriteLine("Creating WordBuilder");
-            WordWriter wordWriter = new WordWriter(destFile);
-
             string title = titleHtml.SubstringLast(null, ":");
             int volume;
             Int32.TryParse(titleHtml.SubstringLast(":Volume", " - Baka-Tsuki").ToString(), out volume);
-            
+
+            if (destFile == null || destFile == "")
+            {
+                destFile = title + ".docx";
+            }
+
             ///TOD One could try going back to the collection page and search for the phrase "Written by"
+            Console.WriteLine("Creating WordBuilder");
+            WordWriter wordWriter = new WordWriter(destFile);
             wordWriter.Title(title, "Yuu", volume);
 
 
@@ -158,9 +170,9 @@ namespace Baka_Tsuki_Downloader
                                 chapterContent = TagType.removeEndlinesFromBeginning(chapterContent);
                                 string imageLink = tagAndContent.FindFirst("href");
                                 //X - imageLink = GetImageURL("File_Ultimate Antihero V2 003.jpg - Baka-Tsuki.html");
-                                //imageLink = GetImageURL("https://www.baka-tsuki.org" + imageLink);
+                                imageLink = GetImageURL("https://www.baka-tsuki.org" + imageLink);
                                 Console.WriteLine("Link to image page: " +  imageLink);
-                                //wordWriter.Image("https://www.baka-tsuki.org" + imageLink);
+                                wordWriter.Image("https://www.baka-tsuki.org" + imageLink);
                                 //X - wordWriter.Image(path + "thumb.png");
                                 break;
                            /* case TagType.Type.a:
@@ -275,7 +287,7 @@ namespace Baka_Tsuki_Downloader
                 
                 }
 
-                Console.WriteLine("Chapter " + i++ + " finished");
+                Console.WriteLine("Chapter " + i + " finished");
                 Logger.Lap("Write");
 
             }

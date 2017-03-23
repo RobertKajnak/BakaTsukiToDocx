@@ -17,9 +17,9 @@ namespace Baka_Tsuki_Downloader
 
             string title = "[dir]Ultimate Antihero.docx";
             string URL = "https://www.baka-tsuki.org/project/index.php?title=Ultimate_Antihero:Volume_2";
-            //Downloader.Download(URL,title);
-            string html = Downloader.ReadHTML("Ultimate Antihero Volume 2 - Baka-Tsuki.htm");
-            Downloader.Convert(html, title);
+            Downloader.DownloadAndConvert(URL);
+            //string html = Downloader.ReadHTML("Ultimate Antihero Volume 2 - Baka-Tsuki.htm");
+            //Downloader.Convert(html, title);
 
             Console.ReadKey();
         }
