@@ -189,7 +189,14 @@ namespace Baka_Tsuki_Downloader
             //parag.Range.InsertParagraph();//adds newLine
 
             parag = doc.Content.Paragraphs.Add(rng);
-            parag.Range.Text = text + (text[text.Length - 1] == '\n' ? "" : "\n");
+            if (text.Length != 0)
+            {
+                parag.Range.Text = text + (text[text.Length - 1] == '\n' ? "" : "\n");
+            }
+            else
+            {
+                parag.Range.Text = "\n";
+            }
             parag.Range.set_Style(WdBuiltinStyle.wdStyleNormal);
             //parag.Format.SpaceAfter = 6;
             //parag.Range.InsertParagraphAfter();
@@ -297,6 +304,13 @@ namespace Baka_Tsuki_Downloader
                 rng.InsertBreak(WdBreakType.wdPageBreak);
             }
 
+        }
+
+        public void PageBreak()
+        {
+            rng = doc.Bookmarks.get_Item(ref oEndOfDoc).Range;
+            parag = doc.Content.Paragraphs.Add(rng);
+            parag.Range.InsertBreak(WdBreakType.wdPageBreak);
         }
 
         ~WordWriter()

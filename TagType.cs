@@ -14,6 +14,7 @@ namespace Baka_Tsuki_Downloader
         private readonly static Type[] openTags = { Type.sup, Type.span, Type.img, Type.divOpen };
         private readonly static Type[] inParagraphTags = { Type.lt, Type.gt, Type.span, Type.sup};
 
+        private readonly static string[] standAloneTags = {"img", "br", "hr", "!--", "input"};
         /// <summary>
         /// Get the type of a tag.
         /// </summary>
@@ -107,19 +108,24 @@ namespace Baka_Tsuki_Downloader
             return content;
         }
 
-        public class Tag
+        /// <summary>
+        /// A rudimentary search with few guarantees, that will return the first instance of tag containing the key anywhere in itself
+        /// </summary>
+        /// <param name="rawText">the html string</param>
+        /// <param name="key"> The searched term</param>
+        /// <returns></returns>
+        public static Tag FastSearch(string rawText, string key)
         {
-            public string name;
-            public List<Tag> innerTags;
-            public Dictionary<string, string> attributes;
-            public string content;
+            int i = rawText.IndexOf(key);
+            if (i == -1)
+                return null;
+            Tag tag = new Tag();
 
-            public Tag()
+            while (i>0 && rawText[i] != '<')
             {
-                innerTags = new List<Tag>();
-                attributes = new Dictionary<string, string>();
+                i--;
             }
-
+            return getTagComplete(rawText.Substring(i - 1));
         }
 
         /// <summary>
@@ -133,7 +139,10 @@ namespace Baka_Tsuki_Downloader
             string s;
             return getTagComplete(rawTest, out s, out s);
         }
-        
+
+        ///TODO make it not crash on script tag
+        static int debugOuter = 0;
+        static int debugInner = 0;
         /// <summary>
         /// Parses a string to get the content and attributes of the first tag it finds. The tag contains any inner tags as well. 
         /// It should not containt any &gt; or &lt; sign that is not a part of a tag 
@@ -157,17 +166,19 @@ namespace Baka_Tsuki_Downloader
             Tag tag = new Tag();
 
             ///flags:
-            bool searchingForTagName = true, inContent = false, inQuotes = false, inContentTagOpened=false;
+            bool searchingForTagName = true, inContent = false, inQuotes = false, inContentTagOpened=false, isStandAloneTag = false;
           //  int pos = startIndex;
             string s = "";
             string parsed = rawText.Substring(startIndex + 1);
 
             //foreach (char c in parsed)
             char c;
+            debugOuter++;
             for (int i = 0;i<parsed.Length;i++)
             {
                 c = parsed[i];
-                //pos++;
+                debugInner++;
+
                 if (inContentTagOpened)
                 {
                     /// if there is a space right after the &lt;, it isn't considered a correct tag
@@ -194,7 +205,8 @@ namespace Baka_Tsuki_Downloader
 
                     string bef, aft;
                     tag.innerTags.Add(getTagComplete(parsed.Substring(i - 1),out bef,out aft));
-                    i += (parsed.Length - i) - aft.Length;
+                    i += (parsed.Length - i) - aft.Length -1 ;
+                    inContentTagOpened = false;
                     continue;
 
                 }
@@ -202,87 +214,74 @@ namespace Baka_Tsuki_Downloader
                 if (searchingForTagName && (c == ' ' || c == '>'))
                 {
                     searchingForTagName = false;
-                    tag.name = s;
-                    s = "";
-                    continue;
-                }
-
-                if (c == '>' && !inQuotes && !inContent)
-                {
-                    inContent = true;
-                    if (s.Length > 3 && s.Contains("="))
+                    if (c == '>')
                     {
-                        if (s.IndexOf("=") == s.Length)
-                        {
-                            tag.attributes.Add(s.Substring(0, s.Length - 1), "");
-                        }
-                        else
-                        {
-                            string[] sa = s.Split(new char[] { '=' }, 2);
-                            tag.attributes.Add(sa[0], sa[1]);
-                        }
+                       inContent = true;
+                    }
+                    tag.name = s;
+                    if (standAloneTags.Contains(s))
+                    {
+                        isStandAloneTag = true;
                     }
                     s = "";
                     continue;
                 }
 
-                /// A tag that doesnt have end, but is closed in itself i.e. &lt;div /&gt;
+                ///it is either the beginning of the content of a tag or the end of a standalne tag
+                if (c == '>' && !inQuotes && !inContent)
+                {
+
+                    AddContentToTag(tag, s);
+
+                    ///a standalone tag ends: content set to emptystring and remaining attribute added
+                    if (isStandAloneTag)
+                    {
+                        contentAfter = parsed.Substring(i + 1);
+                        return tag;
+                    }
+
+                    inContent = true;
+                    s = "";
+                    continue;
+                }
+                
+                /// A tag that doesnt have end, but is closed in itself i.e. &lt;br /&gt;
                 if (c=='/' && (!inQuotes && parsed[i+1] == '>'))
                 {
                     tag.content = "";
+                    AddContentToTag(tag, s);
 
-                    if(s.Length > 3 && s.Contains("="))
-                    {
-                        if (s.IndexOf("=") == s.Length)
-                        {
-                            tag.attributes.Add(s.Substring(0, s.Length - 1), "");
-                        }
-                        else
-                        {
-                            string[] sa = s.Split(new char[] { '=' }, 2);
-                            tag.attributes.Add(sa[0], sa[1]);
-                        }
-                    }
                     contentAfter = parsed.Substring(i + 2);
                     return tag;
                 }
 
+                ///The content of the tag is starting
                 if (c== '<' && inContent)
                 {
                     inContentTagOpened = true;
                     continue;
                 }
 
-                // if c=='<' && !incontent it should add it
-
-                if (inQuotes && c == '"')
-                {
-                    inQuotes = false;
-                    continue;
-                }
-
+                /// if c=='&lt;' && !incontent it should add it
+            
+                ///entering or exiting quotes
                 if (c == '"')
                 {
-                    inQuotes = true;
+                    if (inQuotes)
+                    {
+                        inQuotes = false;
+                    }
+                    else
+                    {
+                        inQuotes = true;
+                    }
                     continue;
                 }
 
                 ///any other cases of c==&gt; should be handled by this point
                 if (c == ' ' && !inQuotes && !inContent)
                 {
-                    ///the name of the tag cannot contain '='
-                    if (s.Length > 3 && s.Contains("="))
-                    {
-                        if (s.IndexOf("=") == s.Length)
-                        {
-                            tag.attributes.Add(s.Substring(0, s.Length - 1), "");
-                        }
-                        else
-                        {
-                            string[] sa = s.Split(new char[] { '=' }, 2);
-                            tag.attributes.Add(sa[0], sa[1]);
-                        }
-                    }
+                    AddContentToTag(tag, s);
                     s = "";
                     continue;
                 }
@@ -290,6 +289,30 @@ namespace Baka_Tsuki_Downloader
             }
 
             return tag;
+        }
+
+
+        /// <summary>
+        /// Adds the content of s to the tag's attributes' list
+        /// </summary>
+        /// <param name="tag">The content tag to be added to</param>
+        /// <param name="s">The string containtng the raw attribute</param>
+        private static void AddContentToTag(Tag tag, string s)
+        {
+            ///the name of the tag cannot contain '='
+            ///length>3 => contains at least one letter, equal, one letter
+            if (s.Length > 2 && s.IndexOf("=") >= 1)
+            {
+                if (s.IndexOf("=") == s.Length)
+                {
+                    tag.attributes.Add(s.Substring(0, s.Length - 1), "");
+                }
+                else
+                {
+                    string[] sa = s.Split(new char[] { '=' }, 2);
+                    tag.attributes.Add(sa[0], sa[1]);
+                }
+            }
         }
 
         /// TODO(tentative) this might actually be a lot faster if a single char array was used (i.e. the content of the string not copied n times)

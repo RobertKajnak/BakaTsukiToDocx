@@ -31,6 +31,15 @@ namespace Baka_Tsuki_Downloader
             return content.Substring(start, end - start);
         }
 
+        public string SubstringInclusive(string from, string to)
+        {
+            int tempStart = from == null ? 0 : content.IndexOf(from);
+            int tempEnd = to == null ? content.Length : content.IndexOf(to);
+            start = from == null ? 0 : tempStart < 0 ? 0 : tempStart;
+            end = to == null ? content.Length : tempEnd < 0 ? content.Length : content.IndexOf(to) + to.Length;
+            return content.Substring(start, end - start);
+        }
+
         /// <summary>
         /// Gets the Last substring using the two strings as delimiters. Send null to set them to 0 and last character respectively
         /// </summary>

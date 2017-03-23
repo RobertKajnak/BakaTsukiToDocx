@@ -13,8 +13,6 @@ namespace Baka_Tsuki_Downloader
         static string path = Directory.GetCurrentDirectory() + "\\data\\";
 
         private static string[] lineSeparators = { "<p>", "\n</p>" };
-        private static string[] listSeparators = { "<ul>", "</ul>" };
-        private static string[] listElementSeparator = { "<li>", "</li>" };
         private static string[] chapterSeparator = { "<h2>" };
 
         public Downloader()
@@ -22,7 +20,7 @@ namespace Baka_Tsuki_Downloader
 
         }
 
-        public static void Download(string URL, string fileName)
+        public static void DownloadToHTML(string URL, string fileName)
         {
             WordWriter wordWriter = new WordWriter(fileName);
 
@@ -31,21 +29,25 @@ namespace Baka_Tsuki_Downloader
             System.IO.File.WriteAllText(fileName, html);
 
         }
-        
 
-        public static void Convert(string sourcefile, string destFile)
+
+        public static string ReadHTML(string sourceFile)
         {
             Logger.Start("Read & Convert");
             Console.WriteLine("Reading soulrce file");
-            string html = File.ReadAllText(path + sourcefile);
+            string html = File.ReadAllText(path + sourceFile);
+            return html;
+        }
+
+        public static void Convert(string html, string destFile)
+        {
+            Console.WriteLine("Creating Parser");
+            StringParser content = new StringParser(html);
+            StringParser titleHtml = new StringParser(content.Substring("<title>", "</title"));
+
             Console.WriteLine("Creating WordBuilder");
             WordWriter wordWriter = new WordWriter(destFile);
 
-            Console.WriteLine("Creating Parser");
-            StringParser content = new StringParser(html);
-
-
-            StringParser titleHtml = new StringParser(content.Substring("<title>", "</title"));
             string title = titleHtml.SubstringLast(null, ":");
             int volume;
             Int32.TryParse(titleHtml.SubstringLast(":Volume", " - Baka-Tsuki").ToString(), out volume);
@@ -59,15 +61,16 @@ namespace Baka_Tsuki_Downloader
 
             Console.WriteLine("Starting Conversion");
             string[] chapters = content.ToString().Split(chapterSeparator, StringSplitOptions.RemoveEmptyEntries);
-            string footNoteSection = chapters.Last();
+            Tag footNotes = TagType.getTagComplete(chapters.Last().Substring(chapters.Last().IndexOf("</h2>")+5));
+
             chapters = chapters.Take(chapters.Length - 1).ToArray();
             Logger.Stop("Read & Convert");
             Logger.Start("Write");
             int i = 0;
             foreach (string chapter in chapters)
             {
-                if (i >= 3)
-                    break;
+               /* if (i >= 3)
+                    break;*/
                 if (i == 0)
                 {
                     i++;
@@ -92,7 +95,7 @@ namespace Baka_Tsuki_Downloader
                 float spaceBefore = -1, spaceAfter = -1;
                 while (chapterContent.Length != 0)
                 {
-                    TagType.Tag tagAndContent = null;
+                    Tag tagAndContent = null;
 
                     int firstIndex = chapterContent.IndexOf('<');
 
@@ -153,10 +156,14 @@ namespace Baka_Tsuki_Downloader
                                 chapterContent = "Ss " + chapterContent;
                                 tagAndContent = TagType.getTagComplete(chapterContent, out s1, out chapterContent);
                                 chapterContent = TagType.removeEndlinesFromBeginning(chapterContent);
-                                string imageLink = tagAndContent.innerTags.ElementAt(0).innerTags.ElementAt(0).attributes["href"];
-                                Console.WriteLine("Link to image page: " + imageLink);
+                                string imageLink = tagAndContent.FindFirst("href");
+                                //X - imageLink = GetImageURL("File_Ultimate Antihero V2 003.jpg - Baka-Tsuki.html");
+                                //imageLink = GetImageURL("https://www.baka-tsuki.org" + imageLink);
+                                Console.WriteLine("Link to image page: " +  imageLink);
+                                //wordWriter.Image("https://www.baka-tsuki.org" + imageLink);
+                                //X - wordWriter.Image(path + "thumb.png");
                                 break;
-                            case TagType.Type.a:
+                           /* case TagType.Type.a:
                                 Dictionary<string, string> ats = TagType.getTagAttributes(tag);
 
                                 try {
@@ -165,13 +172,13 @@ namespace Baka_Tsuki_Downloader
                                     WriteWarning("Link with no href detected. Skipping"); }
 
                                 chapterContent = chapterContent.Substring(closeBracketIndex + 1);
-                                break;
-                            case TagType.Type.img:
+                                break;*/
+                            /*case TagType.Type.img:
                                 ///this would only get the thumbnail
                                 //Dictionary<string, string> ats = TagType.getTagAttributes(tag);
                                 //WriteWarning("Image ignored: " + ats["alt"]);
                                 chapterContent = chapterContent.Substring(closeBracketIndex + 1);
-                                break;
+                                break;*/
                             case TagType.Type.ul:
                                 try
                                 {
@@ -209,15 +216,19 @@ namespace Baka_Tsuki_Downloader
                                 case (TagType.Type.sup):
                                     string bef;
                                     tagAndContent = TagType.getTagComplete(toMod + chapterContent, out bef, out chapterContent);
-                                    ///substring(1) - > skip the pound
-                                    string footNoteId = tagAndContent.innerTags.ElementAt(0).attributes["href"].Substring(1);
-                                    tagAndContent = TagType.getTagComplete(footNoteSection.Substring(footNoteSection.IndexOf("<li id=\"" + footNoteId)));
-                                    string endNote = tagAndContent.innerTags.ElementAt(1).content;
-                                    wordWriter.ParagraphConditional(buffer + bef);
-                                    buffer = "";
-                                    toMod = "";
-                                    wordWriter.Endnote(endNote);
-                                    //Console.WriteLine("Sup id: " + footNoteId + "| content: " + endNote);
+                                    try {
+                                        string footNoteId = tagAndContent.FindFirst("href").Substring(1);
+                                        string endNote = footNotes.FindFirst("id",footNoteId).FindFirst("class", "reference-text").content;
+                                        wordWriter.ParagraphConditional(buffer + bef);
+                                        buffer = "";
+                                        toMod = "";
+                                        wordWriter.Endnote(endNote);
+                                        //Console.WriteLine("Sup id: " + footNoteId + "| content: " + endNote);
+                                    }
+                                    catch
+                                    {
+                                        WriteWarning("Footnote reference found, but it points to an invalid location");
+                                    }
                                     break;
                                 case TagType.Type.span:
                                     toMod = toMod.Replace(tag, "");
@@ -240,7 +251,8 @@ namespace Baka_Tsuki_Downloader
                         }
                             
                         ///case 2.original, i.e. no inparagraph tag
-                        wordWriter.Paragraph(TagType.removeEndlinesFromEnd(chapterContent.Substring(0, firstIndex)),spaceBefore,spaceAfter);
+                        ///TODO "firtsindex + 1" or without 1
+                        wordWriter.Paragraph(TagType.removeEndlinesFromEnd(chapterContent.Substring(0, firstIndex + 1)),spaceBefore,spaceAfter);
                         spaceBefore = spaceAfter = -1;
                         chapterContent = chapterContent.Substring(firstIndex);
                         
@@ -267,11 +279,24 @@ namespace Baka_Tsuki_Downloader
                 Logger.Lap("Write");
 
             }
+
+            wordWriter.Chapter("FootNotes");
             wordWriter.TableOfContents(false);
             Logger.Stop("Write");
             Logger.PutDelimiter();
             Console.WriteLine("Writing data to Word document finished");
             wordWriter.SaveAndQuit();
+        }
+
+        private static string GetImageURL(string url)
+        {
+            //string html = File.ReadAllText(path + url);
+            string html = new System.Net.WebClient().DownloadString(url);
+            string content = new StringParser(html).SubstringInclusive("<body","</body>");
+
+            Tag tag = TagType.FastSearch(content, "class=\"fullImageLink\"");
+            tag = tag.FindFirst("id", "file");
+            return tag.FindFirst("href");
         }
 
         public static void WriteWarning(string message)
@@ -281,5 +306,10 @@ namespace Baka_Tsuki_Downloader
             Console.WriteLine(message);
             Console.ForegroundColor = oldColor;
         }
+
+        ///TODO Bugs to correct:
+        ///1. Get THe proper name of the author.
+        ///2. Remove the newline before the References(footnotes)
+        ///3.
     }
  }
