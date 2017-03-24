@@ -80,22 +80,29 @@ namespace Baka_Tsuki_Downloader
 
             if (volume > 0)
             {
+                parag = doc.Content.Paragraphs.Add(rng = doc.Bookmarks.get_Item(ref oEndOfDoc).Range);
                 parag.Range.Text = "Volume " + volume;
+                parag.Format.set_Style(doc.Styles[WdBuiltinStyle.wdStyleTitle]);
                 parag.Format.Alignment = WdParagraphAlignment.wdAlignParagraphCenter;
                 parag.Range.Font.Size = 24;
                 parag.Format.SpaceAfter = 36;
                 parag.Range.InsertParagraphAfter();
             }
-            
+
             if (author != null)
             {
-                parag.Range.Text = author;
-                parag.Format.Alignment = WdParagraphAlignment.wdAlignParagraphCenter;
-                parag.Range.Font.Color = WdColor.wdColorGray60;
-                parag.Range.Font.Italic = 1;
-                parag.Range.Font.Size = 22;
-                parag.Format.SpaceAfter = 0;
-                parag.Range.InsertParagraphAfter();
+                foreach (string s in author.Split(new char[] { '\n' }))
+                { 
+                    parag = doc.Content.Paragraphs.Add(rng = doc.Bookmarks.get_Item(ref oEndOfDoc).Range);
+                    parag.Range.Text = s;
+                    parag.Format.set_Style(doc.Styles[WdBuiltinStyle.wdStyleSubtitle]);
+                    parag.Format.Alignment = WdParagraphAlignment.wdAlignParagraphCenter;
+                    parag.Range.Font.Color = WdColor.wdColorGray60;
+                    parag.Range.Font.Italic = 1;
+                    parag.Range.Font.Size = 22;
+                    parag.Format.SpaceAfter = 0;
+                    parag.Range.InsertParagraphAfter();
+                }
             }
 
             //parag.Range.InsertBreak(WdBreakType.wdPageBreak);
