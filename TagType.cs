@@ -539,6 +539,11 @@ namespace Baka_Tsuki_Downloader
             return toClean.Substring(endlnCount);
         }
 
+        /// <summary>
+        /// Removes all endline characters from the end of the string and returns the new string
+        /// </summary>
+        /// <param name="toClean">String to clean</param>
+        /// <returns>The cleaned string</returns>
         public static string removeEndlinesFromEnd(string toClean)
         {
             int endlnPos = toClean.Length - 1;
@@ -546,7 +551,20 @@ namespace Baka_Tsuki_Downloader
             {
                 endlnPos--;
             }
-            return toClean.Substring(0,endlnPos);
+            ///Substring(0,endlnPos) would actually be the position of the forelast character,  since the actual last character is not included
+            return toClean.Substring(0, endlnPos + 1);
+        }
+
+        public static string removeEndlinesFromEnd(string toClean, out int removedCharacterCount)
+        {
+            removedCharacterCount = toClean.Length;
+            int endlnPos = toClean.Length - 1;
+            while (endlnPos > 0 && toClean[endlnPos] == '\n')
+            {
+                endlnPos--;
+            }
+            removedCharacterCount -= endlnPos;
+            return toClean.Substring(0,endlnPos + 1);
         }
     }
 

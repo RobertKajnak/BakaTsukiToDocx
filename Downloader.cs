@@ -16,12 +16,20 @@ namespace Baka_Tsuki_Downloader
         private static string[] lineSeparators = { "<p>", "\n</p>" };
         private static string[] chapterSeparator = { "<h2>" };
 
+        bool isLimitedTest = false;
+        string tempString;
+
         public Downloader()
         {
 
         }
 
-        public static void DownloadAndConvert(string URL)
+        public Downloader(bool setLimitedTest)
+        {
+            isLimitedTest = setLimitedTest;
+        }
+
+        public void DownloadAndConvert(string URL)
         {
             WebClient wc = new System.Net.WebClient();
             wc.Encoding = Encoding.UTF8;
@@ -29,7 +37,7 @@ namespace Baka_Tsuki_Downloader
             Convert(html,null);
         }
 
-        public static void DownloadToHTML(string URL, string fileName)
+        public void DownloadToHTML(string URL, string fileName)
         {
             //WordWriter wordWriter = new WordWriter(fileName);
 
@@ -39,7 +47,7 @@ namespace Baka_Tsuki_Downloader
 
         }
 
-        public static string ReadHTML(string sourceFile)
+        public string ReadHTML(string sourceFile)
         {
             Logger.Start("Read & Convert");
             Console.WriteLine("Reading soulrce file");
@@ -47,7 +55,12 @@ namespace Baka_Tsuki_Downloader
             return html;
         }
 
-        public static void Convert(string html, string destFile)
+        public void Convert(string html)
+        {
+            this.Convert(html, null);
+        }
+
+        public void Convert(string html, string destFile)
         {
             Console.WriteLine("Creating Parser");
             StringParser content = new StringParser(html);
@@ -59,7 +72,7 @@ namespace Baka_Tsuki_Downloader
 
             if (destFile == null || destFile == "")
             {
-                destFile = title + ".docx";
+                destFile = title + " - Volume " + volume + ".docx";
             }
 
             ///TOD One could try going back to the collection page and search for the phrase "Written by"
@@ -68,7 +81,7 @@ namespace Baka_Tsuki_Downloader
             wordWriter.Title(title, "Yuu", volume);
 
 
-            //TOOD:Handle <Pre>
+            //TOOD:Handle <Pre> ???
             content = new StringParser(content.Substring("<h2>", "<td> Back to <a"));
 
             Console.WriteLine("Starting Conversion");
@@ -81,16 +94,14 @@ namespace Baka_Tsuki_Downloader
             int i = 0;
             foreach (string chapter in chapters)
             {
-               /* if (i >= 3)
-                    break;*/
+                if (isLimitedTest && i >= 3 )
+                    break;
                 if (i == 0)
                 {
                     i++;
                     continue;
                 }
-
                 
-
                 //inserting everything at once with \n instead of paragraph by paragraph increased speed by ~1000 times
                 ///TODO change br similar to div
                 string chapterContent = chapter.Replace("<p>", "").Replace("</p>","").Replace("<br />","\n").Replace("&lt;","<lt>").Replace("&gt;","<gt>");
@@ -144,25 +155,14 @@ namespace Baka_Tsuki_Downloader
                                 chapterContent = chapterContent.Substring(closeBracketIndex + 1);
                                 break;
                             case TagType.Type.h3:
+                                ///TODO - check which one is better
                                 string subtitle = TagType.getContent(chapterContent, TagType.Type.h3,out chapterContent);
+
+                                /*tagAndContent = TagType.getTagComplete(chapterContent,out tempString, out chapterContent);
+                                string subtitle = tagAndContent.FindFirst("class", "mw-headline").content;*/
                                 wordWriter.SubChapter(subtitle);
                                 spaceBefore = spaceAfter = -1;
                                 break;
-                            /*case (TagType.Type.sup):
-                                string s2;
-                                tagAndContent = TagType.getTagComplete(chapterContent,out s2, out chapterContent);
-                                ///substring(1) - > skip the pound
-                                string footNoteId = tagAndContent.innerTags.ElementAt(0).attributes["href"].Substring(1);
-                                tagAndContent = TagType.getTagComplete(footNoteSection.Substring(footNoteSection.IndexOf("<li id=\"" + footNoteId)));
-                                string endNote = tagAndContent.innerTags.ElementAt(1).content;
-                                wordWriter.Endnote(endNote);
-                                Console.WriteLine("Sup id: " + footNoteId + "| content: " + endNote);
-                                break;*/
-                            /*case TagType.Type.div:
-                               // spaceBefore += spaceBefore == -1 ? 3 : 1;
-                                chapterContent = chapterContent.Substring(closeBracketIndex + 1);
-                                chapterContent = TagType.removeEndlinesFromBeginning(chapterContent);
-                                break;*/
                             case TagType.Type.divOpen:
                                 string s1;
                                 chapterContent = "Ss " + chapterContent;
@@ -170,27 +170,18 @@ namespace Baka_Tsuki_Downloader
                                 chapterContent = TagType.removeEndlinesFromBeginning(chapterContent);
                                 string imageLink = tagAndContent.FindFirst("href");
                                 //X - imageLink = GetImageURL("File_Ultimate Antihero V2 003.jpg - Baka-Tsuki.html");
-                                imageLink = GetImageURL("https://www.baka-tsuki.org" + imageLink);
-                                Console.WriteLine("Link to image page: " +  imageLink);
-                                wordWriter.Image("https://www.baka-tsuki.org" + imageLink);
+                                if (!isLimitedTest)
+                                {
+                                    imageLink = GetImageURL("https://www.baka-tsuki.org" + imageLink);
+                                    Console.WriteLine("Downloading image: " + imageLink);
+                                    wordWriter.Image("https://www.baka-tsuki.org" + imageLink);
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Got Image Url: " + imageLink);
+                                }
                                 //X - wordWriter.Image(path + "thumb.png");
                                 break;
-                           /* case TagType.Type.a:
-                                Dictionary<string, string> ats = TagType.getTagAttributes(tag);
-
-                                try {
-                                    WriteWarning("Link ignored: " + tag + "/w link" + ats["hfref"]); }
-                                catch {
-                                    WriteWarning("Link with no href detected. Skipping"); }
-
-                                chapterContent = chapterContent.Substring(closeBracketIndex + 1);
-                                break;*/
-                            /*case TagType.Type.img:
-                                ///this would only get the thumbnail
-                                //Dictionary<string, string> ats = TagType.getTagAttributes(tag);
-                                //WriteWarning("Image ignored: " + ats["alt"]);
-                                chapterContent = chapterContent.Substring(closeBracketIndex + 1);
-                                break;*/
                             case TagType.Type.ul:
                                 try
                                 {
@@ -203,7 +194,8 @@ namespace Baka_Tsuki_Downloader
                                 }
                                 break;
                             default:
-                                Console.WriteLine("Uninterpreted tag: " + tag);
+                                ///TODO this will break for uninterpreted nested tag: use the new method
+                                WriteWarning("Uninterpreted tag: " + tag);
                                 chapterContent = TagType.removeEndlinesFromBeginning(chapterContent.Substring(closeBracketIndex + 1));
                                 break;
                         }
@@ -263,8 +255,7 @@ namespace Baka_Tsuki_Downloader
                         }
                             
                         ///case 2.original, i.e. no inparagraph tag
-                        ///TODO "firtsindex + 1" or without 1
-                        wordWriter.Paragraph(TagType.removeEndlinesFromEnd(chapterContent.Substring(0, firstIndex + 1)),spaceBefore,spaceAfter);
+                        wordWriter.Paragraph(TagType.removeEndlinesFromEnd(chapterContent.Substring(0, firstIndex)),spaceBefore,spaceAfter);
                         spaceBefore = spaceAfter = -1;
                         chapterContent = chapterContent.Substring(firstIndex);
                         
@@ -277,7 +268,6 @@ namespace Baka_Tsuki_Downloader
                             chapterContent = buffer + chapterContent;
                             buffer = "";
                         }
-                        ///TODO replace this with the method
                         chapterContent = TagType.removeEndlinesFromEnd(chapterContent);
 
                         wordWriter.Paragraph(chapterContent,spaceBefore,spaceAfter);
@@ -287,12 +277,15 @@ namespace Baka_Tsuki_Downloader
                 
                 }
 
-                Console.WriteLine("Chapter " + i + " finished");
+                Console.WriteLine("Chapter " + (i++-1) + " finished");
                 Logger.Lap("Write");
 
             }
 
-            wordWriter.Chapter("FootNotes");
+            if (wordWriter.hasEndnotes())
+            {
+                wordWriter.Chapter("Endnotes");
+            }
             wordWriter.TableOfContents(false);
             Logger.Stop("Write");
             Logger.PutDelimiter();
@@ -300,7 +293,7 @@ namespace Baka_Tsuki_Downloader
             wordWriter.SaveAndQuit();
         }
 
-        private static string GetImageURL(string url)
+        private string GetImageURL(string url)
         {
             //string html = File.ReadAllText(path + url);
             string html = new System.Net.WebClient().DownloadString(url);
@@ -311,7 +304,7 @@ namespace Baka_Tsuki_Downloader
             return tag.FindFirst("href");
         }
 
-        public static void WriteWarning(string message)
+        public void WriteWarning(string message)
         {
             ConsoleColor oldColor = Console.ForegroundColor;
             Console.ForegroundColor = ConsoleColor.Red;

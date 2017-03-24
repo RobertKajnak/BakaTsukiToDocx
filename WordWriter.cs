@@ -268,6 +268,10 @@ namespace Baka_Tsuki_Downloader
             doc.Endnotes.Add(rng, oMissing, text);
         }
 
+        public bool hasEndnotes()
+        {
+            return doc.Endnotes.Count > 0;
+        }
         /// <summary>
         /// Choose the place to put the TOC to
         /// </summary>

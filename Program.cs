@@ -8,20 +8,38 @@ namespace Baka_Tsuki_Downloader
 {
     class Program
     {
+        private static Downloader downloader;
         static void Main(string[] args)
         {
 
 
-           /* WriterTest();
-            Console.ReadKey(); return;*/
+            /* WriterTest();
+             Console.ReadKey(); return;*/
 
-            string title = "[dir]Ultimate Antihero.docx";
+            LimitedTest();
+
+            Console.WriteLine("Press any key to convert the docx to .mobi. Press escape to Terminate program");
+            System.ConsoleKeyInfo k = Console.ReadKey();
+            if (!k.Key.Equals(ConsoleKey.Escape))
+            {
+                Console.WriteLine("Coming soon");
+            }
+           // Console.ReadKey();
+        }
+
+        public static void CompleteTest()
+        {
+            downloader = new Downloader();
             string URL = "https://www.baka-tsuki.org/project/index.php?title=Ultimate_Antihero:Volume_2";
-            Downloader.DownloadAndConvert(URL);
-            //string html = Downloader.ReadHTML("Ultimate Antihero Volume 2 - Baka-Tsuki.htm");
-            //Downloader.Convert(html, title);
+            downloader.DownloadAndConvert(URL);
+        }
 
-            Console.ReadKey();
+        public static void LimitedTest()
+        {
+            downloader = new Downloader(true);
+            string html = downloader.ReadHTML("Ultimate Antihero Volume 2 - Baka-Tsuki.htm");
+            string title = "[dir]Ultimate Antihero.docx";
+            downloader.Convert(html,title);
         }
 
         public static void WriterTest()
