@@ -43,6 +43,10 @@ namespace Baka_Tsuki_Downloader
         public string DownloadAndConvert(string URL)
         {
             string html = webClient.DownloadString(URL);
+
+            ///TODO remove this in beta version
+            string baseURL = URL.Substring(URL.LastIndexOf('/') + 1);
+            System.IO.File.WriteAllText(baseURL.Substring(baseURL.LastIndexOf("=") + 1).Replace(":"," ").Replace("?"," "), html);
             return Convert(html,null);
         }
 
