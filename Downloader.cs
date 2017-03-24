@@ -15,13 +15,22 @@ namespace Baka_Tsuki_Downloader
 
         private static string[] lineSeparators = { "<p>", "\n</p>" };
         private static string[] chapterSeparator = { "<h2>" };
+        string _author;
+        public void setAuthor(string author)
+        {
+            _author = author;
+        }
+
+        WebClient webClient;
 
         bool isLimitedTest = false;
         string tempString;
 
         public Downloader()
         {
-
+            webClient = new System.Net.WebClient();
+            webClient.Encoding = Encoding.UTF8;
+            _author = "";
         }
 
         public Downloader(bool setLimitedTest)
@@ -31,9 +40,7 @@ namespace Baka_Tsuki_Downloader
 
         public void DownloadAndConvert(string URL)
         {
-            WebClient wc = new System.Net.WebClient();
-            wc.Encoding = Encoding.UTF8;
-            string html = wc.DownloadString(URL);
+            string html = webClient.DownloadString(URL);
             Convert(html,null);
         }
 
@@ -41,7 +48,7 @@ namespace Baka_Tsuki_Downloader
         {
             //WordWriter wordWriter = new WordWriter(fileName);
 
-            string html = new System.Net.WebClient().DownloadString(URL);
+            string html = webClient.DownloadString(URL);
 
             System.IO.File.WriteAllText(fileName, html);
 
@@ -58,6 +65,60 @@ namespace Baka_Tsuki_Downloader
         public void Convert(string html)
         {
             this.Convert(html, null);
+        }
+
+
+        /// <summary>
+        /// TODO - does not work;
+        /// </summary>
+        /// <param name="url"></param>
+        /// <returns></returns>
+        private string FetchAuthor(string url)
+        {
+            string html;
+            try {
+                  html = webClient.DownloadString(url);
+            }
+            catch
+            {
+            try {
+                    html = File.ReadAllText(path + url);
+                }
+                catch
+                {
+                    return "Unknown";
+                }
+                
+            }
+
+            
+            string result;
+            int startIndex = html.IndexOf("written by "); 
+            if (startIndex != -1)
+            {
+                /// 11 == length of "written by
+                result = html.Substring(startIndex + 11);
+                ///this can be done way more efficiently, with s[i]
+                int pointIndex = result.IndexOf(".");
+                int commaIndex = result.IndexOf(",");
+                int colonIndex = result.IndexOf(";");
+                if (pointIndex == -1)
+                    pointIndex = int.MaxValue;
+                if (commaIndex == -1)
+                    commaIndex = int.MaxValue;
+                if (colonIndex == -1)
+                    colonIndex = int.MaxValue;
+
+                int finalIndex = pointIndex < commaIndex ? pointIndex : commaIndex;
+                if (colonIndex < finalIndex)
+                    finalIndex = colonIndex;
+
+                if (finalIndex < 50)
+                    return result.Substring(0, finalIndex);
+                
+
+            }
+            return "Unkown";
         }
 
         public void Convert(string html, string destFile)
@@ -78,7 +139,15 @@ namespace Baka_Tsuki_Downloader
             ///TOD One could try going back to the collection page and search for the phrase "Written by"
             Console.WriteLine("Creating WordBuilder");
             WordWriter wordWriter = new WordWriter(destFile);
-            wordWriter.Title(title, "Yuu", volume);
+            string author = _author ;
+            /*if (isLimitedTest)
+            {
+                author = FetchAuthor("Ultimate Antihero - Baka-Tsuki.html");
+            }
+            else {
+                author = FetchAuthor("https://www.baka-tsuki.org/project/index.php?title=" + title.Replace(' ', '_'));
+            }*/
+            wordWriter.Title(title, author, volume);
 
 
             //TOOD:Handle <Pre> ???
@@ -315,6 +384,6 @@ namespace Baka_Tsuki_Downloader
         ///TODO Bugs to correct:
         ///1. Get THe proper name of the author.
         ///2. Remove the newline before the References(footnotes)
-        ///3.
+        ///3. Change the endlines to spaceBefore (i.e. after endnotes)
     }
  }

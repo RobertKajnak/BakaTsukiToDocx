@@ -31,12 +31,14 @@ namespace Baka_Tsuki_Downloader
         {
             downloader = new Downloader();
             string URL = "https://www.baka-tsuki.org/project/index.php?title=Ultimate_Antihero:Volume_2";
+            downloader.setAuthor("Riku Misora\n海空 りく");
             downloader.DownloadAndConvert(URL);
         }
 
         public static void LimitedTest()
         {
             downloader = new Downloader(true);
+            downloader.setAuthor("Riku Misora\n海空 りく");
             string html = downloader.ReadHTML("Ultimate Antihero Volume 2 - Baka-Tsuki.htm");
             string title = "[dir]Ultimate Antihero.docx";
             downloader.Convert(html,title);
