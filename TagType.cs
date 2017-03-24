@@ -532,7 +532,7 @@ namespace Baka_Tsuki_Downloader
         {
             int endlnCount = 0;
             int length = toClean.Length;
-            while (endlnCount <= length && toClean[endlnCount] == '\n')
+            while (endlnCount < length && toClean[endlnCount] == '\n')
             {
                 endlnCount++;
             }

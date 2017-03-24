@@ -16,6 +16,8 @@ namespace Baka_Tsuki_Downloader
         private static string[] lineSeparators = { "<p>", "\n</p>" };
         private static string[] chapterSeparator = { "<h2>" };
         string _author;
+        string _fileName;
+
         public void setAuthor(string author)
         {
             _author = author;
@@ -38,10 +40,10 @@ namespace Baka_Tsuki_Downloader
             isLimitedTest = setLimitedTest;
         }
 
-        public void DownloadAndConvert(string URL)
+        public string DownloadAndConvert(string URL)
         {
             string html = webClient.DownloadString(URL);
-            Convert(html,null);
+            return Convert(html,null);
         }
 
         public void DownloadToHTML(string URL, string fileName)
@@ -62,9 +64,9 @@ namespace Baka_Tsuki_Downloader
             return html;
         }
 
-        public void Convert(string html)
+        public string Convert(string html)
         {
-            this.Convert(html, null);
+            return this.Convert(html, null);
         }
 
 
@@ -121,7 +123,7 @@ namespace Baka_Tsuki_Downloader
             return "Unkown";
         }
 
-        public void Convert(string html, string destFile)
+        public string Convert(string html, string destFile)
         {
             Console.WriteLine("Creating Parser");
             StringParser content = new StringParser(html);
@@ -133,12 +135,16 @@ namespace Baka_Tsuki_Downloader
 
             if (destFile == null || destFile == "")
             {
-                destFile = title + " - Volume " + volume + ".docx";
+                _fileName = title + " - Volume " + volume + ".docx";
+            }
+            else
+            {
+                _fileName = destFile;
             }
 
             ///TOD One could try going back to the collection page and search for the phrase "Written by"
             Console.WriteLine("Creating WordBuilder");
-            WordWriter wordWriter = new WordWriter(destFile);
+            WordWriter wordWriter = new WordWriter(_fileName);
             string author = _author ;
             /*if (isLimitedTest)
             {
@@ -360,6 +366,7 @@ namespace Baka_Tsuki_Downloader
             Logger.PutDelimiter();
             Console.WriteLine("Writing data to Word document finished");
             wordWriter.SaveAndQuit();
+            return _fileName;
         }
 
         private string GetImageURL(string url)
@@ -385,5 +392,6 @@ namespace Baka_Tsuki_Downloader
         ///1. Get THe proper name of the author.
         ///2. Remove the newline before the References(footnotes)
         ///3. Change the endlines to spaceBefore (i.e. after endnotes)
+        ///4. Include the first images, such as cover, etc.
     }
  }

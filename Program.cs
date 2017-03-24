@@ -9,39 +9,49 @@ namespace Baka_Tsuki_Downloader
     class Program
     {
         private static Downloader downloader;
+        /// <summary>
+        /// TODO - This should obviously be fethced, or be included on install
+        /// </summary>
+        static readonly string calibreLoc = @"C:\Program Files\Calibre2";
+        static DocxToMobiConverter docxToMobi;
         static void Main(string[] args)
         {
-
+            docxToMobi = new DocxToMobiConverter(calibreLoc);
 
             /* WriterTest();
              Console.ReadKey(); return;*/
 
-            LimitedTest();
+            string resultingFile = "[dir]Ultimate Antihero.docx"; //LimitedTest();
+            resultingFile = CompleteTest();
 
+            Console.WriteLine("Successfully saved to " + resultingFile);
             Console.WriteLine("Press any key to convert the docx to .mobi. Press escape to Terminate program");
             System.ConsoleKeyInfo k = Console.ReadKey();
             if (!k.Key.Equals(ConsoleKey.Escape))
             {
-                Console.WriteLine("Coming soon");
+                Console.WriteLine("Starting Conversion");
+                docxToMobi.Convert(resultingFile);
+                Console.WriteLine("Conversion Finished");
+                Console.ReadKey();
             }
-           // Console.ReadKey();
         }
 
-        public static void CompleteTest()
+        public static string CompleteTest()
         {
             downloader = new Downloader();
-            string URL = "https://www.baka-tsuki.org/project/index.php?title=Ultimate_Antihero:Volume_2";
-            downloader.setAuthor("Riku Misora\n海空 りく");
-            downloader.DownloadAndConvert(URL);
+            Console.WriteLine("Please specify the URL to download from: ");
+            string URL = Console.ReadLine(); // "https://www.baka-tsuki.org/project/index.php?title=Ultimate_Antihero:Volume_2";
+            downloader.setAuthor("Riku Misora|海空 りく");
+            return downloader.DownloadAndConvert(URL);
         }
 
-        public static void LimitedTest()
+        public static string LimitedTest()
         {
             downloader = new Downloader(true);
-            downloader.setAuthor("Riku Misora\n海空 りく");
+            downloader.setAuthor("Riku Misora|海空 りく");
             string html = downloader.ReadHTML("Ultimate Antihero Volume 2 - Baka-Tsuki.htm");
             string title = "[dir]Ultimate Antihero.docx";
-            downloader.Convert(html,title);
+            return downloader.Convert(html,title);
         }
 
         public static void WriterTest()

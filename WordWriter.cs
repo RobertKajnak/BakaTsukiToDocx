@@ -68,6 +68,13 @@ namespace Baka_Tsuki_Downloader
             Title(title, author, -1);
         }
 
+        /// <summary>
+        /// Adds the provided items on the first page
+        /// </summary>
+        /// <param name="title"></param>
+        /// <param name="author">If there are more authors, they should be separated by '|' or '\n'</param>
+        /// <param name="volume"></param>
+
         public void Title(string title, string author, int volume)
         {
             parag = doc.Content.Paragraphs.Add(ref oMissing);
@@ -91,7 +98,7 @@ namespace Baka_Tsuki_Downloader
 
             if (author != null)
             {
-                foreach (string s in author.Split(new char[] { '\n' }))
+                foreach (string s in author.Split(new char[] { '\n', '|' }))
                 { 
                     parag = doc.Content.Paragraphs.Add(rng = doc.Bookmarks.get_Item(ref oEndOfDoc).Range);
                     parag.Range.Text = s;
@@ -298,7 +305,7 @@ namespace Baka_Tsuki_Downloader
             
 
             doc.TablesOfContents.Add(rng, true /*use heading styles*/, oMissing, oMissing, oMissing,
-                                                    oMissing, oMissing, oMissing, oMissing, oMissing,
+                                                    oMissing, oMissing, oMissing, oMissing, true,
                                                     oMissing, oMissing);
             rng.InsertParagraphBefore();
             rng.InsertParagraphBefore();

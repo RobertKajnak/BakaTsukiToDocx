@@ -48,6 +48,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DocxToMobiConverter.cs" />
     <Compile Include="Downloader.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Program.cs" />
