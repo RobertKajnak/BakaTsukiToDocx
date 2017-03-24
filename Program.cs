@@ -21,8 +21,8 @@ namespace Baka_Tsuki_Downloader
             /* WriterTest();
              Console.ReadKey(); return;*/
 
-            string resultingFile = "[dir]Ultimate Antihero.docx"; //LimitedTest();
-            resultingFile = CompleteTest();
+            string resultingFile = /*"[dir]Ultimate Antihero.docx";*/ LimitedTest();
+            //resultingFile = CompleteTest();
 
             Console.WriteLine("Successfully saved to " + resultingFile);
             Console.WriteLine("Press any key to convert the docx to .mobi. Press escape to Terminate program");
@@ -49,7 +49,7 @@ namespace Baka_Tsuki_Downloader
         {
             downloader = new Downloader(true);
             downloader.setAuthor("Riku Misora|海空 りく");
-            string html = downloader.ReadHTML("Ultimate Antihero Volume 2 - Baka-Tsuki.htm");
+            string html = downloader.ReadHTML("File_Ultimate Antihero V2 003.jpg - Baka-Tsuki.html");
             string title = "[dir]Ultimate Antihero.docx";
             return downloader.Convert(html,title);
         }

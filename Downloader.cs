@@ -46,7 +46,7 @@ namespace Baka_Tsuki_Downloader
 
             ///TODO remove this in beta version
             string baseURL = URL.Substring(URL.LastIndexOf('/') + 1);
-            System.IO.File.WriteAllText(baseURL.Substring(baseURL.LastIndexOf("=") + 1).Replace(":"," ").Replace("?"," "), html);
+            System.IO.File.WriteAllText("data\\" + baseURL.Substring(baseURL.LastIndexOf("=") + 1).Replace(":"," ").Replace("?"," ") + ".html", html);
             return Convert(html,null);
         }
 
