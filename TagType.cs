@@ -9,12 +9,12 @@ namespace Baka_Tsuki_Downloader
 {
     static class TagType
     {
-        public enum Type {h1=0, h2, h3, div, ul, li, gt, lt, sup, span, img, a, divOpen, uncategorized};
-        private static string[] tags= { "<h1>", "<h2>", "<h3>", "</div>" ,"<ul>", "<li>", "<gt>", "<lt>", "<sup", "<span", "<img", "<a" , "<div" };
+        public enum Type {h1=0, h2, h3, div, ul, li, gt, lt, i, b, u, em, sup, span, img, a, divOpen, uncategorized};
+        private static string[] tags= { "<h1>", "<h2>", "<h3>", "</div>" ,"<ul>", "<li>", "<gt>", "<lt>", "<i>", "<b>", "<u>", "<em>" ,"<sup", "<span", "<img", "<a" , "<div" };
         private readonly static Type[] openTags = { Type.sup, Type.span, Type.img, Type.divOpen };
-        private readonly static Type[] inParagraphTags = { Type.lt, Type.gt, Type.span, Type.sup};
+        private readonly static Type[] inParagraphTags = { Type.lt, Type.gt, Type.span, Type.i, Type.b, Type.u, Type.em, Type.sup};
 
-        private readonly static string[] standAloneTags = {"img", "br", "hr", "!--", "input"};
+        private readonly static string[] standAloneTags = {"img", "br", "hr", "!--", "input", "lt", "gt"};
         /// <summary>
         /// Get the type of a tag.
         /// </summary>

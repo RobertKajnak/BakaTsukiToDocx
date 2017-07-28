@@ -46,7 +46,7 @@ namespace Baka_Tsuki_Downloader
 
             ///TODO remove this in beta version
             string baseURL = URL.Substring(URL.LastIndexOf('/') + 1);
-            System.IO.File.WriteAllText("data\\" + baseURL.Substring(baseURL.LastIndexOf("=") + 1).Replace(":"," ").Replace("?"," ") + ".html", html);
+            System.IO.File.WriteAllText(path + baseURL.Substring(baseURL.LastIndexOf("=") + 1).Replace(":"," ").Replace("?"," ") + ".html", html);
             return Convert(html,null);
         }
 
@@ -312,6 +312,12 @@ namespace Baka_Tsuki_Downloader
                                     {
                                         WriteWarning("Footnote reference found, but it points to an invalid location");
                                     }
+                                    break;
+                                case (TagType.Type.b):
+                                    tagAndContent = TagType.getTagComplete(toMod + chapterContent, out bef, out chapterContent);
+                                    wordWriter.ParagraphConditional(buffer + bef,true,false,false);
+                                    
+                                    toMod = "";
                                     break;
                                 case TagType.Type.span:
                                     toMod = toMod.Replace(tag, "");

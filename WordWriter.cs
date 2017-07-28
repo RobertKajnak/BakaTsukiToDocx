@@ -227,6 +227,19 @@ namespace Baka_Tsuki_Downloader
 
         }
 
+        public void ParagraphConditional(string text, bool bold, bool italic, bool underlined)
+        {
+            rng = doc.Bookmarks.get_Item(ref oEndOfDoc).Range;
+
+            parag = doc.Content.Paragraphs.Add(rng);
+            parag.Range.Text = text;
+            parag.Range.set_Style(WdBuiltinStyle.wdStyleNormal);
+            if (bold) {
+                parag.Range.Font.Bold = 1;
+            }
+
+        }
+
         public void Image(string location)
         {
 
